@@ -12,6 +12,9 @@ Let us create a math format for the problem we want to resolve. Denote the web a
 ## Tentative features to be delivered by the project
 - discover undocumented APIs
 - discover the business logic via the APIs discovered.
-- orchestrate the API calls to automate a user journey
+- Orchestrate the API calls to automate a user journey
 
-
+## Tentative work items - based on the known info of the target web app
+1. All the APIs are fully known (this is the strongest assumption): orchestrate sequences of API calls to simulate a user. The component for compiling APIs specs into python calls in Restler-fuzzer can be borrowed or reused.
+2. APIs are unknown but web traffic can be captured in the client side such as a HAR file: leverage tools such as MITMProxy2Swagger to build API specs and it falls back to case 1 if ```all``` APIs can be found. This is untrue for most of cases.
+3. In most cases and the most difficult case we only know part of APIs either via public API specs or from traffic. We need to create new methods to obtain more API specs. It is a task similar to fuzzing but with a much larger space to search. 
