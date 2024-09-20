@@ -8,6 +8,9 @@ Let us create a math format for the problem we want to resolve. Denote the web a
 - POSTMAN: https://www.postman.com
 - Zaproxy: https://github.com/zaproxy/zaproxy
 - Restler-fuzzer: https://github.com/microsoft/restler-fuzzer?tab=readme-ov-file
+- Katana: https://github.com/projectdiscovery/katana
+- LinkFinder https://github.com/GerbenJavado/LinkFinder
+- FFUF https://github.com/ffuf/ffuf
 
 ## Tentative features to be delivered by the project
 - discover undocumented APIs
