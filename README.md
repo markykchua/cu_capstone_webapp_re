@@ -11,6 +11,8 @@ Let us create a math format for the problem we want to resolve. Denote the web a
 - Katana: https://github.com/projectdiscovery/katana
 - LinkFinder https://github.com/GerbenJavado/LinkFinder
 - FFUF https://github.com/ffuf/ffuf
+- https://zenodo.org/records/7702754 https://arxiv.org/pdf/2208.09505 (related by very different perspective using metamorphic testing)
+- https://www.usenix.org/system/files/sec24summer-prepub-198-stafeev.pdf (an up-to-date survey of crawlers)
 
 ## Tentative features to be delivered by the project
 - discover undocumented APIs
