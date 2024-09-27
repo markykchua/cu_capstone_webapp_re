@@ -30,34 +30,44 @@ namespace UserReplay
                         IFlurlRequest request = new FlurlRequest(entry["request"]["url"].Value<string>()).AllowAnyHttpStatus();
                         foreach (var header in entry["request"]["headers"])
                         {
-                            if (header["name"].Value<string>().StartsWith(":"))
+                            // skip headers that are not allowed with Flurl
+                            if (header["name"].Value<string>().StartsWith(":") || header["name"].Value<string>().Equals("content-length", StringComparison.CurrentCultureIgnoreCase))
                             {
                                 continue;
+                            }
+                            else
+                            {
+                                string headerName = header["name"].Value<string>();
+                                string headerValue = header["value"].Value<string>();
+                                request.WithHeader(headerName, headerValue);
                             }
                         }
                         foreach (var query in entry["request"]["queryString"])
                         {
-                            request.SetQueryParam(query["name"].Value<string>(), query["value"].Value<string>());
+                            string queryName = query["name"].Value<string>();
+                            string queryValue = query["value"].Value<string>();
+                            request.SetQueryParam(queryName, queryValue);
                         }
-                        Log.Information($"Sending {entry["request"]["method"]} request to {entry["request"]["url"]} - {entry["request"]["postData"]["text"]}\n{entry["request"]["headers"]}");
+                        Log.Information($"Sending {entry["request"]["method"]} request to {entry["request"]["url"]} - expecting {entry["response"]["status"]} response");
+                        //return true;
                         var response = entry["request"]["method"].Value<string>() switch
                         {
                             "GET" => await request.GetAsync(),
-                            "POST" => await request.PostJsonAsync(new StringContent(entry["request"]["postData"]["text"].ToString())),
-                            "PUT" => await request.PutJsonAsync(new StringContent(entry["request"]["postData"]["text"].ToString())),
-                            "PATCH" => await request.PatchJsonAsync(new StringContent(entry["request"]["postData"]["text"].ToString())),
+                            "POST" => await request.PostStringAsync(entry["request"]["postData"]["text"].ToString()),
+                            "PUT" => await request.PutStringAsync(entry["request"]["postData"]["text"].ToString()),
+                            "PATCH" => await request.PatchStringAsync(entry["request"]["postData"]["text"].ToString()),
                             "OPTIONS" => await request.OptionsAsync(),
                             "DELETE" => await request.DeleteAsync(),
                             _ => throw new InvalidOperationException()
                         };
                         if (response.StatusCode >= 400)
                         {
-                            Log.Error($"Request: {entry["request"]["url"]} Response: {response.StatusCode} (original status: {entry["response"]["status"]})");
+                            Log.Error($"Endpoint responded {response.StatusCode} (original status: {entry["response"]["status"]})");
                             return false;
                         }
                         else
                         {
-                            Log.Information($"Request: {entry["request"]["url"]} Response: {response.StatusCode} {response.ResponseMessage} (original status: {entry["response"]["status"]})");
+                            Log.Information($"Endpoint responded {response.StatusCode} {response.ResponseMessage} (original status: {entry["response"]["status"]})");
                         }
                     }
                     return true;
