@@ -154,7 +154,7 @@ namespace UserReplay
             {
                 Status = response["status"].Value<int>();
                 Headers = response.ContainsKey("headers") ? (response["headers"] as JArray).ToDictionary(h => h["name"].Value<string>(), h => h["value"].Value<string>()) : new Dictionary<string, string>();
-                Body = response["content"]["text"].Value<string>();
+                Body = response["content"]?["text"]?.Value<string>() ?? "";
             }
             public ParsedResponse(IFlurlResponse response)
             {
@@ -198,9 +198,21 @@ namespace UserReplay
                     Requests.Add(request);
                 }
             }
+
+            public List<string> GetHosts()
+            {
+                return Requests.Select(r => new Uri(r.Url).Host).Distinct().ToList();
+            }
+
+            public List<string> GetEndPointsForHost(string host)
+            {
+                return Requests.Where(r => new Uri(r.Url).Host == host).Select(r => new Uri(r.Url).AbsolutePath).Distinct().ToList();
+            }
+
             public override string ToString()
             {
-                return $"Session with {Requests.Count} requests, {(Authenticated.Type != AuthType.None ? Authenticated.ToString() : "No authentication")}";
+                return $"Session with {Requests.Count} requests, {(Authenticated.Type != AuthType.None ? Authenticated.ToString() : "No authentication used")}\n" +
+                    string.Join("\n", GetHosts().Select(h => $"Endpoints for Host: {h}\n{string.Join("\n", GetEndPointsForHost(h).Select(e => $"    |  {e}"))}\n"));
             }
         }
 
