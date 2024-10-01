@@ -137,6 +137,35 @@ namespace UserReplay
                 return authInfo;
             }
 
+            public ParsedRequest GetAuthOrigin(Session session)
+            {
+                AuthInfo authInfo = GetAuth();
+                if (authInfo.Type == AuthType.None)
+                {
+                    return null;
+                }
+                else if (authInfo.Type == AuthType.Basic)
+                {
+                    return this;
+                }
+                else if (authInfo.Type == AuthType.Bearer)
+                {
+                    // find the request with a response containing the token
+                    foreach (var request in session.Requests)
+                    {
+                        if (request.Response.Body.Contains(authInfo.Credentials.Value<string>()))
+                        {
+                            return request;
+                        }
+                    }
+                    throw new InvalidOperationException("Bearer token not found in any response - is this a complete session?");
+                }
+                else
+                {
+                    throw new InvalidOperationException("Only Basic and Bearer authentication is supported");
+                }
+            }
+
             public override string ToString()
             {
                 return $"REQUEST {Method} {Url} - {JObject.FromObject(QueryParams)}{(Method != HttpMethod.GET && !string.IsNullOrEmpty(Body) ? $"\nBody: {Body}" : "")} \n==>\n{Response}\n";
@@ -163,8 +192,6 @@ namespace UserReplay
                 Body = response.ResponseMessage.Content.ReadAsStringAsync().Result;
             }
 
-
-
             public override string ToString()
             {
                 return $"RESPONSE {Status} : {(!string.IsNullOrEmpty(Body) ? $"\nBody: {(Body.Length > 200 ? Body[..200] + "......" : Body)}" : "")}\n";
@@ -187,7 +214,6 @@ namespace UserReplay
         public class Session
         {
             public List<ParsedRequest> Requests { get; set; } = new();
-            public AuthInfo Authenticated { get; set; } = new AuthInfo();
             public Session(JObject har)
             {
                 var entries = har["log"]["entries"];
@@ -209,10 +235,21 @@ namespace UserReplay
                 return Requests.Where(r => new Uri(r.Url).Host == host).Select(r => new Uri(r.Url).AbsolutePath).Distinct().ToList();
             }
 
+            public List<ParsedRequest> GetAuthRequests()
+            {
+                return Requests.Select(r => r.GetAuthOrigin(this)).Where(o => o != null).Distinct().ToList();
+            }
+
+            public List<ParsedRequest> GetAuthRequestUses(ParsedRequest authRequest)
+            {
+                return Requests.Where(r => r.GetAuthOrigin(this) == authRequest).Distinct().ToList();
+            }
+
             public override string ToString()
             {
-                return $"Session with {Requests.Count} requests, {(Authenticated.Type != AuthType.None ? Authenticated.ToString() : "No authentication used")}\n" +
-                    string.Join("\n", GetHosts().Select(h => $"Endpoints for Host: {h}\n{string.Join("\n", GetEndPointsForHost(h).Select(e => $"    |  {e}"))}\n"));
+                return $"Session with {Requests.Count} requests\n" +
+                    string.Join("\n", GetHosts().Select(h => $"Endpoints for Host: {h}\n{string.Join("\n", GetEndPointsForHost(h).Select(e => $"    |  {e}"))}\n")) +
+                    (GetAuthRequests().Count > 0 ? $"Auth requests: {string.Join("\n", GetAuthRequests().Select(a => $"-{new Uri(a.Url).AbsolutePath} (Used {GetAuthRequestUses(a)} times)"))}\n" : "");
             }
         }
 
