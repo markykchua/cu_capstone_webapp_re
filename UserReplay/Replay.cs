@@ -27,9 +27,9 @@ namespace UserReplay
                 {
                     var har = JObject.Parse(File.ReadAllText(FileName));
                     // naive implementation
-                    foreach (var entry in har["log"]["entries"])
+                    Session session = new(har);
+                    foreach (ParsedRequest request in session.Requests)
                     {
-                        ParsedRequest request = new(entry["request"] as JObject, entry["response"] as JObject);
                         IFlurlResponse response = await request.Replay();
                         ParsedResponse parsedResponse = new(response);
                         Log.Information(request.ToString());

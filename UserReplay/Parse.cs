@@ -26,35 +26,12 @@ namespace UserReplay
                     Log.Information($"Parsing HAR file: {FileName}");
                     // parse HAR file into JObject
                     var har = JObject.Parse(File.ReadAllText(FileName));
-                    Session session = new();
-                    var entries = har["log"]["entries"];
-                    var requests = new List<ParsedRequest>();
-                    foreach (var entry in entries.Cast<JObject>())
+                    Session session = new(har);
+
+                    foreach (var request in session.Requests)
                     {
-                        ParsedRequest request = new(entry["request"] as JObject, entry["response"] as JObject);
-                        request.SetTime(entry["startedDateTime"].Value<string>(), entry["time"].Value<double>());
-                        requests.Add(request);
-                    }
-                    foreach (var request in requests)
-                    {
-                        session.Requests.Add(request);
                         Log.Information(request.ToString());
                     }
-
-                    var authHeader = requests.FirstOrDefault(r => r.Headers.ContainsKey("authorization"));
-                    AuthType authType = authHeader switch
-                    {
-                        { } when authHeader.Headers["authorization"].ToString().StartsWith("Basic") => AuthType.Basic,
-                        { } when authHeader.Headers["authorization"].ToString().StartsWith("Bearer") => AuthType.Bearer,
-                        { } when authHeader.Headers.ContainsKey("authorization") => AuthType.Other,
-                        _ => AuthType.None
-                    };
-
-                    session.Authenticated = new AuthInfo
-                    {
-                        Type = authType,
-                        Credentials = authHeader?.Headers["authorization"] ?? ""
-                    };
 
                     Log.Information(session.ToString());
 
@@ -138,6 +115,28 @@ namespace UserReplay
                 };
             }
 
+            public AuthInfo GetAuth()
+            {
+                AuthInfo authInfo = new();
+                if (Headers.TryGetValue("authorization", out string value))
+                {
+                    if (Enum.TryParse(value.Split(" ")[0], true, out AuthType authType))
+                    {
+                        authInfo.Type = authType;
+                    }
+                    else
+                    {
+                        authInfo.Type = AuthType.Other;
+                    }
+                    authInfo.Credentials = value;
+                }
+                else
+                {
+                    authInfo.Type = AuthType.None;
+                }
+                return authInfo;
+            }
+
             public override string ToString()
             {
                 return $"REQUEST {Method} {Url} - {JObject.FromObject(QueryParams)}{(Method != HttpMethod.GET && !string.IsNullOrEmpty(Body) ? $"\nBody: {Body}" : "")} \n==>\n{Response}\n";
@@ -163,6 +162,9 @@ namespace UserReplay
                 Headers = response.Headers.ToDictionary(h => h.Name, h => h.Value);
                 Body = response.ResponseMessage.Content.ReadAsStringAsync().Result;
             }
+
+
+
             public override string ToString()
             {
                 return $"RESPONSE {Status} : {(!string.IsNullOrEmpty(Body) ? $"\nBody: {(Body.Length > 200 ? Body[..200] + "......" : Body)}" : "")}\n";
@@ -186,6 +188,16 @@ namespace UserReplay
         {
             public List<ParsedRequest> Requests { get; set; } = new();
             public AuthInfo Authenticated { get; set; } = new AuthInfo();
+            public Session(JObject har)
+            {
+                var entries = har["log"]["entries"];
+                foreach (var entry in entries.Cast<JObject>())
+                {
+                    ParsedRequest request = new(entry["request"] as JObject, entry["response"] as JObject);
+                    request.SetTime(entry["startedDateTime"].Value<string>(), entry["time"].Value<double>());
+                    Requests.Add(request);
+                }
+            }
             public override string ToString()
             {
                 return $"Session with {Requests.Count} requests, {(Authenticated.Type != AuthType.None ? Authenticated.ToString() : "No authentication")}";
