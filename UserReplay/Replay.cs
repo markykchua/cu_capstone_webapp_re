@@ -28,9 +28,18 @@ namespace UserReplay
                     var har = JObject.Parse(File.ReadAllText(FileName));
                     // naive implementation
                     Session session = new(har);
+                    List<ParsedRequest> bearerAuthRequests = session.GetAuthRequests();
                     foreach (ParsedRequest request in session.Requests)
                     {
                         IFlurlResponse response = await request.Replay();
+                        if (bearerAuthRequests.Contains(request))
+                        {
+                            string token = JToken.Parse(await response.ResponseMessage.Content.ReadAsStringAsync())["access_token"].ToString();
+                            foreach (ParsedRequest authUse in session.GetAuthRequestUses(request))
+                            {
+                                authUse.Headers["Authorization"] = $"Bearer {token}";
+                            }
+                        }
                         ParsedResponse parsedResponse = new(response);
                         Log.Information(request.ToString());
                         Log.Information(parsedResponse.ToString());

@@ -1,6 +1,7 @@
 
 using System.Globalization;
 using System.Net;
+using System.Text;
 using CommandLine;
 using Flurl.Http;
 using Newtonsoft.Json.Linq;
@@ -115,57 +116,6 @@ namespace UserReplay
                 };
             }
 
-            public AuthInfo GetAuth()
-            {
-                AuthInfo authInfo = new();
-                if (Headers.TryGetValue("authorization", out string value))
-                {
-                    if (Enum.TryParse(value.Split(" ")[0], true, out AuthType authType))
-                    {
-                        authInfo.Type = authType;
-                    }
-                    else
-                    {
-                        authInfo.Type = AuthType.Other;
-                    }
-                    authInfo.Credentials = value;
-                }
-                else
-                {
-                    authInfo.Type = AuthType.None;
-                }
-                return authInfo;
-            }
-
-            public ParsedRequest GetAuthOrigin(Session session)
-            {
-                AuthInfo authInfo = GetAuth();
-                if (authInfo.Type == AuthType.None)
-                {
-                    return null;
-                }
-                else if (authInfo.Type == AuthType.Basic)
-                {
-                    return this;
-                }
-                else if (authInfo.Type == AuthType.Bearer)
-                {
-                    // find the request with a response containing the token
-                    foreach (var request in session.Requests)
-                    {
-                        if (request.Response.Body.Contains(authInfo.Credentials.Value<string>()))
-                        {
-                            return request;
-                        }
-                    }
-                    throw new InvalidOperationException("Bearer token not found in any response - is this a complete session?");
-                }
-                else
-                {
-                    throw new InvalidOperationException("Only Basic and Bearer authentication is supported");
-                }
-            }
-
             public override string ToString()
             {
                 return $"REQUEST {Method} {Url} - {JObject.FromObject(QueryParams)}{(Method != HttpMethod.GET && !string.IsNullOrEmpty(Body) ? $"\nBody: {Body}" : "")} \n==>\n{Response}\n";
@@ -237,30 +187,113 @@ namespace UserReplay
 
             public List<ParsedRequest> GetAuthRequests()
             {
-                return Requests.Select(r => r.GetAuthOrigin(this)).Where(o => o != null).Distinct().ToList();
+                return Requests.Select(r => AuthInfo.GetAuthInfo(r, this) is BearerAuth bearerAuth ? bearerAuth.AuthRequest : null).Where(a => a != null).Distinct().ToList();
             }
 
             public List<ParsedRequest> GetAuthRequestUses(ParsedRequest authRequest)
             {
-                return Requests.Where(r => r.GetAuthOrigin(this) == authRequest).Distinct().ToList();
+                return Requests.Where(r => AuthInfo.GetAuthInfo(r, this) is BearerAuth bearerAuth && bearerAuth.AuthRequest == authRequest).ToList();
             }
 
             public override string ToString()
             {
                 return $"Session with {Requests.Count} requests\n" +
                     string.Join("\n", GetHosts().Select(h => $"Endpoints for Host: {h}\n{string.Join("\n", GetEndPointsForHost(h).Select(e => $"    |  {e}"))}\n")) +
-                    (GetAuthRequests().Count > 0 ? $"Auth requests: {string.Join("\n", GetAuthRequests().Select(a => $"-{new Uri(a.Url).AbsolutePath} (Used {GetAuthRequestUses(a)} times)"))}\n" : "");
+                    (GetAuthRequests().Count > 0 ? $"Auth requests: {string.Join("\n", GetAuthRequests().Select(a => $"-{new Uri(a.Url).AbsolutePath} (Used {GetAuthRequestUses(a).Count} times)"))}\n" : "");
             }
         }
 
-        public class AuthInfo
+        public abstract class AuthInfo
         {
-            public AuthType Type { get; set; } = AuthType.None;
-            public JToken Credentials { get; set; } = JValue.CreateNull();
+
+            public static AuthInfo GetAuthInfo(ParsedRequest request, Session session)
+            {
+                if (!request.Headers.TryGetValue("authorization", out string authHeader))
+                {
+                    return new NoneAuth();
+                }
+                else if (Enum.TryParse(authHeader.Split(" ")[0], true, out AuthType authType))
+                {
+                    return authType switch
+                    {
+                        AuthType.None => new NoneAuth(),
+                        AuthType.Basic => new BasicAuth(request),
+                        AuthType.Bearer => new BearerAuth(request, session),
+                        _ => throw new InvalidOperationException("Only Basic and Bearer authentication is supported"),
+                    };
+                }
+                else
+                {
+                    return new OtherAuth(authHeader);
+                }
+
+            }
+        }
+
+        public class NoneAuth : AuthInfo
+        {
+            public NoneAuth() { }
+            public override string ToString()
+            {
+                return "No authentication";
+            }
+        }
+
+        public class BasicAuth : AuthInfo
+        {
+            public string Username { get; set; }
+            public string Password { get; set; }
+
+            public BasicAuth(ParsedRequest request)
+            {
+                string authHeader = request.Headers["authorization"];
+                string[] split = Encoding.UTF8.GetString(Convert.FromBase64String(authHeader.Split(" ")[1])).Split(":");
+                Username = split[0];
+                Password = split[1];
+            }
 
             public override string ToString()
             {
-                return $"Authenticated using {Type} authentication";
+                return $"Basic Auth: {Username} / {Password}";
+            }
+        }
+
+        public class BearerAuth : AuthInfo
+        {
+            public string Token { get; set; }
+            public ParsedRequest AuthRequest { get; set; }
+
+            public BearerAuth(ParsedRequest request, Session session)
+            {
+                Token = request.Headers["authorization"].Split(" ")[1];
+                AuthRequest = GetTokenOrigin(session);
+            }
+
+            public ParsedRequest GetTokenOrigin(Session session)
+            {
+                foreach (var request in session.Requests)
+                {
+                    if (request.Response.Body.Contains(this.Token))
+                    {
+                        return request;
+                    }
+                }
+                return null;
+            }
+
+            public override string ToString()
+            {
+                return $"Bearer Auth: {Token}";
+            }
+        }
+
+        public class OtherAuth(string authHeader) : AuthInfo
+        {
+            public string AuthHeader { get; set; } = authHeader;
+
+            public override string ToString()
+            {
+                return $"Other Auth: {AuthHeader}";
             }
         }
 
