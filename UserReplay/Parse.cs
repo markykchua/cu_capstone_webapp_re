@@ -67,6 +67,10 @@ namespace UserReplay
                     ["title"] = "UserReplay OpenAPI Spec",
                     ["version"] = "1.0.0"
                 },
+                ["servers"] = new JArray(session.GetHosts().Select(h => new JObject
+                {
+                    ["url"] = h
+                })),
                 ["paths"] = new JObject()
             };
             foreach (var request in session.Requests.Where(r => r.Response.Status >= 200 && r.Response.Status < 300))
@@ -74,6 +78,8 @@ namespace UserReplay
                 var path = request.UrlTemplate();
                 if (!(openApi["paths"] as JObject).ContainsKey(path))
                 {
+                    string requestContentType = ContentType(request.Headers, request.Body);
+                    string responseContentType = ContentType(request.Response.Headers, request.Response.Body);
                     openApi["paths"][path] = new JObject
                     {
                         [request.Method.ToString().ToLower()] = new JObject
@@ -86,9 +92,9 @@ namespace UserReplay
                                     ["description"] = "Successful response",
                                     ["content"] = new JObject
                                     {
-                                        [ContentType(request.Headers, request.Body)] = new JObject
+                                        [responseContentType] = new JObject
                                         {
-                                            ["schema"] = GenerateSchema(request.Response.Body)
+                                            ["schema"] = GenerateSchema(request.Response.Body, responseContentType)
                                         }
                                     }
                                 }
@@ -101,9 +107,9 @@ namespace UserReplay
                         {
                             ["content"] = new JObject
                             {
-                                [ContentType(request.Headers, request.Body)] = new JObject
+                                [requestContentType] = new JObject
                                 {
-                                    ["schema"] = GenerateSchema(request.Body)
+                                    ["schema"] = GenerateSchema(request.Body, requestContentType)
                                 }
                             }
                         };
@@ -234,19 +240,40 @@ namespace UserReplay
         }
 
 
-        public JObject GenerateSchema(string body)
+        public JObject GenerateSchema(string body, string contentType)
         {
-            if (body.TryParse(out JToken token))
+            Log.Information($"Generating schema for {contentType}");
+            if (contentType == "application/x-www-form-urlencoded")
+            {
+                return JObject.FromObject(ParseUrlFormEncoded(body));
+            }
+            else if (body.TryParse(out JToken token))
             {
                 return GenerateSchema(token);
             }
-            else
+            return new JObject
             {
-                return new JObject
+                ["type"] = "string"
+            };
+        }
+
+        private Dictionary<string, string> ParseUrlFormEncoded(string urlEncodedString)
+        {
+            var result = new Dictionary<string, string>();
+            var pairs = urlEncodedString.Split('&');
+
+            foreach (var pair in pairs)
+            {
+                var keyValue = pair.Split('=');
+                if (keyValue.Length == 2)
                 {
-                    ["type"] = "string"
-                };
+                    var key = System.Web.HttpUtility.UrlDecode(keyValue[0]);
+                    var value = System.Web.HttpUtility.UrlDecode(keyValue[1]);
+                    result[key] = value;
+                }
             }
+
+            return result;
         }
 
         private JObject GenerateSchema(JToken token)
@@ -268,7 +295,7 @@ namespace UserReplay
                     var arr = new JObject
                     {
                         ["type"] = "array",
-                        ["items"] = (token.Children().Any()) ? GenerateSchema((token as JArray)[0]) : new JObject()
+                        ["items"] = token.Children().Any() ? GenerateSchema((token as JArray)[0]) : new JObject()
                     };
                     return arr;
                 case JTokenType.Integer:
