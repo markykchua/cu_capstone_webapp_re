@@ -1,9 +1,10 @@
 
 using System.Globalization;
-using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using CommandLine;
 using Flurl.Http;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Serilog;
 
@@ -13,6 +14,7 @@ namespace UserReplay
     class Parse : Verb
     {
         [Option('f', "file", Required = true, HelpText = "Path to the HAR file")] public required string FileName { get; set; }
+        [Option('o', Required = false, HelpText = "Export to OpenAPI spec")] public string SwaggerFile { get; set; }
         public override Task<bool> Run()
         {
             try
@@ -36,6 +38,15 @@ namespace UserReplay
 
                     Log.Information(session.ToString());
 
+                    if (!string.IsNullOrEmpty(SwaggerFile))
+                    {
+
+                        Log.Information($"Writing OpenAPI spec to: {SwaggerFile}");
+                        var openApiSpec = GenerateOpenApiSpec(session);
+                        File.WriteAllText(SwaggerFile, openApiSpec);
+                        Log.Information($"OpenAPI spec written to: {SwaggerFile}");
+                    }
+
                 }
                 return Task.FromResult(true);
             }
@@ -44,6 +55,62 @@ namespace UserReplay
                 Log.Error(ex, "An error occurred");
                 return Task.FromResult(false);
             }
+        }
+
+        private string GenerateOpenApiSpec(Session session)
+        {
+            var openApi = new JObject
+            {
+                ["openapi"] = "3.0.0",
+                ["info"] = new JObject
+                {
+                    ["title"] = "UserReplay OpenAPI Spec",
+                    ["version"] = "1.0.0"
+                },
+                ["paths"] = new JObject()
+            };
+            foreach (var request in session.Requests.Where(r => r.Response.Status >= 200 && r.Response.Status < 300))
+            {
+                var path = request.UrlTemplate();
+                if (!(openApi["paths"] as JObject).ContainsKey(path))
+                {
+                    openApi["paths"][path] = new JObject
+                    {
+                        [request.Method.ToString().ToLower()] = new JObject
+                        {
+                            ["summary"] = $"{request.Method} to {path}",
+                            ["responses"] = new JObject
+                            {
+                                [request.Response.Status.ToString()] = new JObject
+                                {
+                                    ["description"] = "Successful response",
+                                    ["content"] = new JObject
+                                    {
+                                        [ContentType(request.Headers, request.Body)] = new JObject
+                                        {
+                                            ["schema"] = GenerateSchema(request.Response.Body)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    };
+                    if (request.Method != HttpMethod.GET && !string.IsNullOrEmpty(request.Body))
+                    {
+                        openApi["paths"][path][request.Method.ToString().ToLower()]["requestBody"] = new JObject
+                        {
+                            ["content"] = new JObject
+                            {
+                                [ContentType(request.Headers, request.Body)] = new JObject
+                                {
+                                    ["schema"] = GenerateSchema(request.Body)
+                                }
+                            }
+                        };
+                    }
+                }
+            }
+            return openApi.ToString(Formatting.Indented);
         }
 
         public class ParsedRequest
@@ -116,9 +183,131 @@ namespace UserReplay
                 };
             }
 
-            public override string ToString()
+            public static Regex numberIdSegment = new(@"\d+", RegexOptions.Compiled);
+            public static Regex uuidSegment = new(@"[a-f0-9]{8}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{12}", RegexOptions.Compiled);
+            public static Regex urlSegmentMatcher = new(@"(\w+)", RegexOptions.Compiled);
+            public string UrlTemplate()
             {
-                return $"REQUEST {Method} {Url} - {JObject.FromObject(QueryParams)}{(Method != HttpMethod.GET && !string.IsNullOrEmpty(Body) ? $"\nBody: {Body}" : "")} \n==>\n{Response}\n";
+                string withoutQuery = new Uri(Url).AbsolutePath;
+
+                // Replace numeric ID segments with {previous_segment}_id
+                withoutQuery = numberIdSegment.Replace(withoutQuery, match =>
+                {
+                    var previousSegment = GetPreviousSegment(withoutQuery, match.Index);
+                    return $"{previousSegment}_id";
+                });
+
+                // Replace UUID segments with {previous_segment}_uuid
+                withoutQuery = uuidSegment.Replace(withoutQuery, match =>
+                {
+                    var previousSegment = GetPreviousSegment(withoutQuery, match.Index);
+                    return $"{previousSegment.TrimEnd('s')}_uuid";
+                });
+
+                return withoutQuery;
+            }
+            private string GetPreviousSegment(string path, int matchIndex)
+            {
+                var segments = path.Substring(0, matchIndex).Split('/');
+                return segments.Length > 1 ? segments[^2] : "id";
+            }
+        }
+
+        public static string ContentType(Dictionary<string, string> headers, string body)
+        {
+            if (headers.TryGetValue("content-type", out string contentType))
+            {
+                return contentType.Split(";")[0];
+            }
+            else if (!string.IsNullOrEmpty(body))
+            {
+                if (body.TryParse(out JToken _))
+                {
+                    return "application/json";
+                }
+                else if (body.TrimStart().StartsWith("<"))
+                {
+                    return body.Contains("<html") ? "text/html" : "application/xml";
+                }
+            }
+            return "text/plain";
+        }
+
+
+        public JObject GenerateSchema(string body)
+        {
+            if (body.TryParse(out JToken token))
+            {
+                return GenerateSchema(token);
+            }
+            else
+            {
+                return new JObject
+                {
+                    ["type"] = "string"
+                };
+            }
+        }
+
+        private JObject GenerateSchema(JToken token)
+        {
+            switch (token.Type)
+            {
+                case JTokenType.Object:
+                    var obj = new JObject
+                    {
+                        ["type"] = "object",
+                        ["properties"] = new JObject()
+                    };
+                    foreach (var prop in (token as JObject).Properties())
+                    {
+                        obj["properties"][prop.Name] = GenerateSchema(prop.Value);
+                    }
+                    return obj;
+                case JTokenType.Array:
+                    var arr = new JObject
+                    {
+                        ["type"] = "array",
+                        ["items"] = (token.Children().Any()) ? GenerateSchema((token as JArray)[0]) : new JObject()
+                    };
+                    return arr;
+                case JTokenType.Integer:
+                    return new JObject
+                    {
+                        ["type"] = "integer"
+                    };
+                case JTokenType.Float:
+                    return new JObject
+                    {
+                        ["type"] = "number"
+                    };
+                case JTokenType.Boolean:
+                    return new JObject
+                    {
+                        ["type"] = "boolean"
+                    };
+                case JTokenType.Null:
+                    return new JObject
+                    {
+                        ["type"] = "null"
+                    };
+                case JTokenType.Date:
+                    return new JObject
+                    {
+                        ["type"] = "string",
+                        ["format"] = "date-time"
+                    };
+                case JTokenType.Bytes:
+                    return new JObject
+                    {
+                        ["type"] = "string",
+                        ["format"] = "byte"
+                    };
+                default:
+                    return new JObject
+                    {
+                        ["type"] = "string"
+                    };
             }
         }
 
@@ -321,6 +510,23 @@ namespace UserReplay
             */
         }
 
+    }
+
+    public static class JTokenExtensions
+    {
+        public static bool TryParse(this string input, out JToken value)
+        {
+            try
+            {
+                value = JToken.Parse(input);
+                return true;
+            }
+            catch
+            {
+                value = JValue.CreateNull();
+                return false;
+            }
+        }
     }
 
 }
