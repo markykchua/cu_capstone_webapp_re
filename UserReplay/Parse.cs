@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using CommandLine;
 using Flurl.Http;
 using Newtonsoft.Json;
@@ -246,6 +247,11 @@ namespace UserReplay
             if (contentType == "application/x-www-form-urlencoded")
             {
                 return JObject.FromObject(ParseUrlFormEncoded(body));
+            }
+            else if (contentType == "application/xml")
+            {
+                XDocument xDoc = XDocument.Parse(body);
+                return GenerateSchema(JObject.Parse(JsonConvert.SerializeXNode(xDoc)));
             }
             else if (body.TryParse(out JToken token))
             {
