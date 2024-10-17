@@ -12,10 +12,16 @@ using Serilog;
 namespace UserReplay
 {
     [Verb("parse", HelpText = "Parse HAR file into readable format")]
-    class Parse : Verb
+    partial class Parse : Verb
     {
         [Option('f', "file", Required = true, HelpText = "Path to the HAR file")] public required string FileName { get; set; }
         [Option('o', Required = false, HelpText = "Export to OpenAPI spec")] public string SwaggerFile { get; set; }
+
+        internal static readonly string[] openApiIgnoreHeaders = ["accept", "content-type", "authorization"];
+
+        [GeneratedRegex(@"/\{(\w+)\}/", RegexOptions.Compiled)]
+        private static partial Regex PathParameterRegex();
+
         public override Task<bool> Run()
         {
             try
@@ -111,6 +117,54 @@ namespace UserReplay
                                 [requestContentType] = new JObject
                                 {
                                     ["schema"] = GenerateSchema(request.Body, requestContentType)
+                                }
+                            }
+                        };
+                    }
+                    foreach (var query in request.QueryParams)
+                    {
+                        openApi["paths"][path][request.Method.ToString().ToLower()]["parameters"] = new JArray
+                        {
+                            new JObject
+                            {
+                                ["name"] = query.Key,
+                                ["in"] = "query",
+                                ["required"] = true,
+                                ["schema"] = new JObject
+                                {
+                                    ["type"] = "string"
+                                }
+                            }
+                        };
+                    }
+                    foreach (var header in request.Headers.Where(h => !(openApiIgnoreHeaders).Where(s => s.Equals(h.Key, StringComparison.CurrentCultureIgnoreCase)).Any()))
+                    {
+                        openApi["paths"][path][request.Method.ToString().ToLower()]["parameters"] = new JArray
+                        {
+                            new JObject
+                            {
+                                ["name"] = header.Key,
+                                ["in"] = "header",
+                                ["required"] = true,
+                                ["schema"] = new JObject
+                                {
+                                    ["type"] = "string"
+                                }
+                            }
+                        };
+                    }
+                    foreach (var pathParam in PathParameterRegex().Matches(path).Select(m => m.Groups[1].Value))
+                    {
+                        openApi["paths"][path][request.Method.ToString().ToLower()]["parameters"] = new JArray
+                        {
+                            new JObject
+                            {
+                                ["name"] = pathParam,
+                                ["in"] = "path",
+                                ["required"] = true,
+                                ["schema"] = new JObject
+                                {
+                                    ["type"] = "string"
                                 }
                             }
                         };
@@ -542,6 +596,7 @@ namespace UserReplay
             TRACE
             */
         }
+
 
     }
 
