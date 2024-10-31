@@ -2,7 +2,7 @@ using static UserReplay.Parse;
 namespace Tests;
 public class Tests
 {
-    private UserReplay.Session _session; 
+    private Session session;
     [SetUp]
     public void Setup()
     {

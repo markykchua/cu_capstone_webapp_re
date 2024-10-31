@@ -12,7 +12,7 @@ using Serilog;
 namespace UserReplay
 {
     [Verb("parse", HelpText = "Parse HAR file into readable format")]
-    partial class Parse : Verb
+    public partial class Parse : Verb
     {
         [Option('f', "file", Required = true, HelpText = "Path to the HAR file")] public required string FileName { get; set; }
         [Option('o', Required = false, HelpText = "Export to OpenAPI spec")] public string SwaggerFile { get; set; }
