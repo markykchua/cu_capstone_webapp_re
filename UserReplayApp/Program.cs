@@ -1,6 +1,6 @@
 ﻿using CommandLine;
 using Serilog;
-using UserReplay;
+using UserReplayApp;
 
 class Program
 {

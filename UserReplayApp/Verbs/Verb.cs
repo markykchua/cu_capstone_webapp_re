@@ -2,7 +2,7 @@
 using CommandLine;
 using Serilog.Events;
 
-namespace UserReplay
+namespace UserReplayApp
 {
     public abstract class Verb
     {

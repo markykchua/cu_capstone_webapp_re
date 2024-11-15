@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="UserReplayApp.MainPage">
+
+     <Grid>
+        <!-- Top Bar with File Picker and Add Box Button -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <HorizontalStackLayout Grid.Row="0" Padding="10" Spacing="15" BackgroundColor="LightGray">
+            <!-- File Picker Button -->
+            <Button
+                Text="Select File"
+                Clicked="OnSelectFileClicked" />
+
+            <!-- Add Box Button -->
+            <Button
+                Text="Add Box"
+                Clicked="OnAddBoxClicked" />
+        </HorizontalStackLayout>
+
+        <!-- Main Layout for Draggable Boxes -->
+        <AbsoluteLayout Grid.Row="1" x:Name="MainLayout" BackgroundColor="White" />
+    </Grid>
+
+</ContentPage>

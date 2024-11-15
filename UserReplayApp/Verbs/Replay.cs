@@ -5,9 +5,9 @@ using Newtonsoft.Json.Linq;
 using Serilog;
 using Flurl;
 using System.Net;
-using static UserReplay.Parse;
+using static UserReplayApp.Parse;
 
-namespace UserReplay
+namespace UserReplayApp
 {
 
     [Verb("replay", HelpText = "Replay requests from a HAR file")]

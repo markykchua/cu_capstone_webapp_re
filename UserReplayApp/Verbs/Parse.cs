@@ -9,7 +9,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Serilog;
 
-namespace UserReplay
+namespace UserReplayApp
 {
     [Verb("parse", HelpText = "Parse HAR file into readable format")]
     partial class Parse : Verb
@@ -71,7 +71,7 @@ namespace UserReplay
                 ["openapi"] = "3.0.0",
                 ["info"] = new JObject
                 {
-                    ["title"] = "UserReplay OpenAPI Spec",
+                    ["title"] = "UserReplayApp OpenAPI Spec",
                     ["version"] = "1.0.0"
                 },
                 ["servers"] = new JArray(session.GetHosts().Select(h => new JObject
@@ -190,7 +190,7 @@ namespace UserReplay
             {
                 Url = request["url"].Value<string>();
                 Method = Enum.Parse<HttpMethod>(request["method"].Value<string>());
-                Headers = request.ContainsKey("headers") ? (request["headers"] as JArray).ToDictionary(h => h["name"].Value<string>(), h => h["value"].Value<string>()) : new Dictionary<string, string>();
+                Headers = request.ContainsKey("headers") ? (request["headers"] as JArray).DistinctBy(h => h["name"]).ToDictionary(h => h["name"].Value<string>(), h => h["value"].Value<string>()) : new Dictionary<string, string>();
                 QueryParams = request.ContainsKey("queryString") ? (request["queryString"] as JArray).ToDictionary(q => q["name"].Value<string>(), q => q["value"].Value<string>()) : new Dictionary<string, string>();
                 Response = new ParsedResponse(response);
                 Body = request.ContainsKey("postData") ? request["postData"]["text"].Value<string>() : "";
