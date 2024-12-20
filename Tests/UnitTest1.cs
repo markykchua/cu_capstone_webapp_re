@@ -36,18 +36,27 @@ public class Tests
 
         [Test]
         public void Session_GetAuthRequests_Test(){
-            var har2 = JObject.Parse(File.ReadAllText("www.reddit.com.har"));
+            var har2 = JObject.Parse(File.ReadAllText("exampleAuth.har"));
             Session session2 = new(har2);
 
-            // List<ParsedRequest> pr = session2.GetAuthRequestUses().GetRange(0,0);
-            // Assert.AreEqual(pr,session.GetAuthRequests());
+            List<ParsedRequest> pr = session2.GetAuthRequests();
+
+            Assert.IsNotEmpty(pr.ElementAt(0).ToString());
         }
 
         [Test]
         public void Session_GetAuthRequestUses_Test()
         {
-            //List<ParsedRequest> getHostsList = new List<ParsedRequest> ();
-            //Assert.AreEqual(session.GetAuthRequestUses(),getHostsList);
+            var har2 = JObject.Parse(File.ReadAllText("exampleAuth.har"));
+            Session session2 = new(har2);
+
+            List<ParsedRequest> pr = session2.GetAuthRequests();
+            List<ParsedRequest> RequestsUsingAuth = session2.GetAuthRequestUses(pr.ElementAt(0));
+
+            TestContext.WriteLine(session2.Requests.Count);
+            TestContext.WriteLine(RequestsUsingAuth.Count);
+
+            Assert.IsNotEmpty(RequestsUsingAuth.ElementAt(0).ToString());
         }
 
 

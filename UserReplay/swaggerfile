@@ -1,0 +1,47 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "UserReplay OpenAPI Spec",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "www.googletagmanager.com"
+    },
+    {
+      "url": "cdn.optimizely.com"
+    },
+    {
+      "url": "location-services-prd.tesla.com"
+    }
+  ],
+  "paths": {
+    "/geoip/city": {
+      "options": {
+        "summary": "OPTIONS to /geoip/city",
+        "responses": {
+          "204": {
+            "description": "Successful response",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "User-Agent",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

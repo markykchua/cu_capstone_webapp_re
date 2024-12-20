@@ -191,7 +191,7 @@ namespace UserReplay
                 Url = request["url"].Value<string>();
                 Method = Enum.Parse<HttpMethod>(request["method"].Value<string>());
                 Headers = request.ContainsKey("headers") ? (request["headers"] as JArray).ToDictionary(h => h["name"].Value<string>(), h => h["value"].Value<string>()) : new Dictionary<string, string>();
-                QueryParams = request.ContainsKey("queryString") ? (request["queryString"] as JArray).ToDictionary(q => q["name"].Value<string>(), q => q["value"].Value<string>()) : new Dictionary<string, string>();
+                QueryParams = request.ContainsKey("queryString") ? (request["queryString"] as JArray).DistinctBy(h => h["nmae"]).ToDictionary(q => q["name"].Value<string>(), q => q["value"].Value<string>()) : new Dictionary<string, string>();
                 Response = new ParsedResponse(response);
                 Body = request.ContainsKey("postData") ? request["postData"]["text"].Value<string>() : "";
                 RequestVersion = request["httpVersion"].Value<string>();
@@ -271,6 +271,11 @@ namespace UserReplay
             {
                 var segments = path.Substring(0, matchIndex).Split('/');
                 return segments.Length > 1 ? segments[^2] : "id";
+            }
+
+        public override string ToString()
+            {
+                return $"REQUEST {Method} {Url} - {JObject.FromObject(QueryParams)}{(Method != HttpMethod.GET && !string.IsNullOrEmpty(Body) ? $"\nBody: {Body}" : "")} \n==>\n{Response}\n";
             }
         }
 
@@ -408,13 +413,13 @@ namespace UserReplay
             public ParsedResponse(JObject response)
             {
                 Status = response["status"].Value<int>();
-                Headers = response.ContainsKey("headers") ? (response["headers"] as JArray).ToDictionary(h => h["name"].Value<string>(), h => h["value"].Value<string>()) : new Dictionary<string, string>();
+                Headers = response.ContainsKey("headers") ? (response["headers"] as JArray).DistinctBy(h => h["name"]).ToDictionary(h => h["name"].Value<string>(), h => h["value"].Value<string>()) : new Dictionary<string, string>();
                 Body = response["content"]?["text"]?.Value<string>() ?? "";
             }
             public ParsedResponse(IFlurlResponse response)
             {
                 Status = response.StatusCode;
-                Headers = response.Headers.ToDictionary(h => h.Name, h => h.Value);
+                Headers = response.Headers.DistinctBy(h => h.Name).ToDictionary(h => h.Name, h => h.Value);
                 Body = response.ResponseMessage.Content.ReadAsStringAsync().Result;
             }
 
