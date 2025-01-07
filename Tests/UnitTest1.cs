@@ -1,14 +1,57 @@
 using Serilog;
 using static UserReplay.Parse;
+using System.IO;
+using System.Net;
 using Newtonsoft.Json.Linq;
 using System.CodeDom.Compiler;
 using UserReplay;
 using Flurl.Http;
-using CommandLine;
+
+
 
 namespace Tests;
 public class Tests
 {
+
+
+    public class OrchestratorTests{
+        private Session session;
+        //private Orchestrator orchestrator;
+
+        [SetUp]
+        public void SetUp(){
+            var har = JObject.Parse(File.ReadAllText("exampleAuth.har"));
+            session = new(har);
+        }
+
+        [Test]
+        public void orchTest1(){
+             UserFlow userFlow = new (session);
+             //TestContext.WriteLine(userFlow.FlowElements.Count);
+             foreach (Tuple<int, SourceDestinationPair> flowElement in userFlow.FlowElements)
+             {
+                TestContext.WriteLine(flowElement.Item1);
+
+                if (flowElement.Item2.parsedRequest.Response.Body.Contains("access_token"))
+                {
+                    TestContext.WriteLine(JObject.Parse(flowElement.Item2.parsedRequest.Response.Body)["access_token"].ToString());
+                }
+                
+                
+                 
+                 TestContext.WriteLine(flowElement.Item1);
+                 if(flowElement.Item2.parsedRequest.Body.Contains("access_token"))
+                 {
+                    TestContext.WriteLine(JObject.Parse(flowElement.Item2.parsedRequest.Body)["access_token"].ToString());
+                    //TestContext.WriteLine(JObject.Parse(flowElement.Item2.parsedRequest.Response.Body)["access_token"].ToString());
+                 }
+                 
+                 TestContext.WriteLine(flowElement.Item1);
+             }
+             //TestContext.WriteLine(userFlow.FlowElements);
+             Assert.Pass();
+        }
+    }
 
     public class sessionTests{
         private Session session;

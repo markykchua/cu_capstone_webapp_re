@@ -9,6 +9,7 @@ using static UserReplay.Parse;
 using System.Reflection.Emit;
 using Flurl.Http.Content;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace UserReplay
 {
@@ -37,21 +38,37 @@ namespace UserReplay
     public class UserFlow
     {
         public List<Tuple<int, SourceDestinationPair>> FlowElements{get;set;}
+        public List<Tuple<int, int>> ListOfOperations{get;set;}
 
         public UserFlow(Session session)
         {
-            var authRequests = session.GetAuthRequests();
+            FlowElements = new List<Tuple<int, SourceDestinationPair>>();
+            var authRequest = session.GetAuthRequests()[0];
+            var dependents = session.GetAuthRequestUses(authRequest);
 
             List<Tuple<ParsedRequest,ParsedRequest>> dependencyDependentPair = new List<Tuple<ParsedRequest,ParsedRequest>>();
             
-            foreach(ParsedRequest authPR in authRequests)
+            int i = 0;
+            foreach (ParsedRequest parsedRequest in session.Requests)
             {
-                foreach(ParsedRequest usesAuthPR in session.GetAuthRequestUses(authPR))
-                {
-                    dependencyDependentPair.Add(Tuple.Create(authPR, usesAuthPR));
-                }      
+                
+
+                if (dependents.Contains(parsedRequest)){
+                    SourceDestinationPair sourceDestinationPair = new SourceDestinationPair(authRequest.Response, "where in the source", parsedRequest, "where in the destination");
+                    FlowElements.Add(Tuple.Create(i, sourceDestinationPair));
+
+                } else {
+                    SourceDestinationPair sourceDestinationPair = new SourceDestinationPair(null, "N/A", parsedRequest, "N/A");
+                    FlowElements.Add(Tuple.Create(i, sourceDestinationPair));
+                    
+                }
+                    
+                
+                i++;
             }
 
+            //JObject parsedAuthResponse = JObject.FromObject(parsedRequest.Response); 
+            //
             // for(int i = 0; i < session.Requests.Count; i++){
             //     ParsedRequest ithRequest = session.Requests[i];
             //     if (dependents.Contains(ithRequest)){
@@ -76,7 +93,66 @@ namespace UserReplay
 
         public void assignNewLocation(int currentLoc, int newLoc)
         {
-            
+            if (currentLoc < FlowElements.Count && newLoc < FlowElements.Count)
+            {
+                Tuple<int, SourceDestinationPair> temp = FlowElements[currentLoc];
+                FlowElements[currentLoc] = FlowElements[newLoc];
+                FlowElements[newLoc] = temp;
+                ListOfOperations.Add(Tuple.Create(currentLoc, newLoc));
+            } else {
+                throw new Exception("Invalid location");
+            }
+        }
+
+        public void undoPreviousOperation()
+        {
+            if (ListOfOperations.Count > 0)
+            {
+                Tuple<int, int> lastOperation = ListOfOperations[ListOfOperations.Count - 1];
+                assignNewLocation(lastOperation.Item2, lastOperation.Item1);
+                ListOfOperations.RemoveAt(ListOfOperations.Count - 1); 
+                ListOfOperations.RemoveAt(ListOfOperations.Count - 1); // remove the last two operations from the list
+            } else {
+                throw new Exception("No operations to undo");
+            }
+        }
+
+        public void resetOperations()
+        {
+            ListOfOperations.Clear();
+            FlowElements.OrderBy(x => x.Item1);
+        }
+
+        public void playFlow(){
+            //List<ParsedRequest> bearerAuthRequests = session.GetAuthRequests();
+                    // foreach (ParsedRequest request in session.Requests)
+                    // {
+                    //     IFlurlResponse response = await request.Replay();
+                    //     if (bearerAuthRequests.Contains(request))
+                    //     {
+                    //         string token = JToken.Parse(await response.ResponseMessage.Content.ReadAsStringAsync())["access_token"].ToString();
+                    //         foreach (ParsedRequest authUse in session.GetAuthRequestUses(request))
+                    //         {
+                    //             authUse.Headers["Authorization"] = $"Bearer {token}";
+                    //         }
+                    //     }
+                    //     ParsedResponse parsedResponse = new(response);
+                    //     Log.Information(request.ToString());
+                    //     Log.Information(parsedResponse.ToString());
+                    //     if (parsedResponse != request.Response)
+                    //     {
+                    //         if (parsedResponse.Status >= 400)
+                    //         {
+                    //             Log.Error($"Request failed unexpectedly: {parsedResponse.Status}");
+                    //             return false;
+                    //         }
+                    //         else
+                    //         {
+                    //             Log.Warning($"Request was successful but response did not match recorded response");
+                    //         }
+                    //     }
+                    // }
+            //
         }
 
 
@@ -90,11 +166,31 @@ namespace UserReplay
         public ParsedRequest parsedRequest{get;set;}
         //auth requests response
         public ParsedResponse parsedResponse {get;set;}
+        public string source {get;set;}
+        public string destination {get;set;}
 
         public SourceDestinationPair(ParsedResponse parsedResponse, string source, ParsedRequest parsedRequest, string destination)
         {
-            this.parsedRequest = parsedRequest;
+            
+            
+            if (source == "where in the source")
+            {
+                
+                JObject jObject = JObject.FromObject(parsedRequest);
+                if (jObject["access_token"] != null)
+                {
+                    jObject["access_token"] = "{{AccessTokenHere}}";
+                }
+                //error here
+                this.parsedRequest = jObject.ToObject<ParsedRequest>();
+                
+            } else {
+                this.parsedRequest = parsedRequest;
+            }
+            
             this.parsedResponse = parsedResponse;
+            this.source = source;
+            this.destination = destination;
 
         }
         

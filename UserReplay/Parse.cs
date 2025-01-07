@@ -191,7 +191,7 @@ namespace UserReplay
                 Url = request["url"].Value<string>();
                 Method = Enum.Parse<HttpMethod>(request["method"].Value<string>());
                 Headers = request.ContainsKey("headers") ? (request["headers"] as JArray).ToDictionary(h => h["name"].Value<string>(), h => h["value"].Value<string>()) : new Dictionary<string, string>();
-                QueryParams = request.ContainsKey("queryString") ? (request["queryString"] as JArray).DistinctBy(h => h["nmae"]).ToDictionary(q => q["name"].Value<string>(), q => q["value"].Value<string>()) : new Dictionary<string, string>();
+                QueryParams = request.ContainsKey("queryString") ? (request["queryString"] as JArray).DistinctBy(h => h["name"]).ToDictionary(q => q["name"].Value<string>(), q => q["value"].Value<string>()) : new Dictionary<string, string>();
                 Response = new ParsedResponse(response);
                 Body = request.ContainsKey("postData") ? request["postData"]["text"].Value<string>() : "";
                 RequestVersion = request["httpVersion"].Value<string>();
