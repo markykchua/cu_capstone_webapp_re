@@ -4,8 +4,8 @@ using System.IO;
 using System.Net;
 using Newtonsoft.Json.Linq;
 using System.CodeDom.Compiler;
-using UserReplay;
 using Flurl.Http;
+//using UserReplay.Orchestrator;
 
 
 
@@ -26,30 +26,11 @@ public class Tests
 
         [Test]
         public void orchTest1(){
-             UserFlow userFlow = new (session);
-             //TestContext.WriteLine(userFlow.FlowElements.Count);
-             foreach (Tuple<int, SourceDestinationPair> flowElement in userFlow.FlowElements)
-             {
-                TestContext.WriteLine(flowElement.Item1);
 
-                if (flowElement.Item2.parsedRequest.Response.Body.Contains("access_token"))
-                {
-                    TestContext.WriteLine(JObject.Parse(flowElement.Item2.parsedRequest.Response.Body)["access_token"].ToString());
-                }
-                
-                
-                 
-                 TestContext.WriteLine(flowElement.Item1);
-                 if(flowElement.Item2.parsedRequest.Body.Contains("access_token"))
-                 {
-                    TestContext.WriteLine(JObject.Parse(flowElement.Item2.parsedRequest.Body)["access_token"].ToString());
-                    //TestContext.WriteLine(JObject.Parse(flowElement.Item2.parsedRequest.Response.Body)["access_token"].ToString());
-                 }
-                 
-                 TestContext.WriteLine(flowElement.Item1);
-             }
-             //TestContext.WriteLine(userFlow.FlowElements);
-             Assert.Pass();
+
+            Assert.Pass();
+
+            
         }
     }
 

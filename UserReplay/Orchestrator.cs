@@ -33,7 +33,7 @@ namespace UserReplay
 
             File.WriteAllText(path + fileName, flowContents);
         }
-    }
+    
 
     public class UserFlow
     {
@@ -48,45 +48,23 @@ namespace UserReplay
 
             List<Tuple<ParsedRequest,ParsedRequest>> dependencyDependentPair = new List<Tuple<ParsedRequest,ParsedRequest>>();
             
-            int i = 0;
-            foreach (ParsedRequest parsedRequest in session.Requests)
-            {
-                
-
-                if (dependents.Contains(parsedRequest)){
-                    SourceDestinationPair sourceDestinationPair = new SourceDestinationPair(authRequest.Response, "where in the source", parsedRequest, "where in the destination");
-                    FlowElements.Add(Tuple.Create(i, sourceDestinationPair));
-
-                } else {
-                    SourceDestinationPair sourceDestinationPair = new SourceDestinationPair(null, "N/A", parsedRequest, "N/A");
-                    FlowElements.Add(Tuple.Create(i, sourceDestinationPair));
-                    
-                }
-                    
-                
-                i++;
-            }
-
-            //JObject parsedAuthResponse = JObject.FromObject(parsedRequest.Response); 
-            //
-            // for(int i = 0; i < session.Requests.Count; i++){
-            //     ParsedRequest ithRequest = session.Requests[i];
-            //     if (dependents.Contains(ithRequest)){
-                    
-            //     }
-            //     FlowElements.Add(new Tuple<int, object>(i,session.Requests[i]));
-            // }
-
-            // var authRequests = session.GetAuthRequests();
-            // foreach (ParsedRequest parsedRequest in authRequests)
+            //int i = 0;
+            // foreach (ParsedRequest parsedRequest in session.Requests)
             // {
                 
-            //     foreach (ParsedRequest usesAuth in session.GetAuthRequestUses(parsedRequest))
-            //     {
-            //         JObject parsedAuthResponse = JObject.FromObject(parsedRequest.Response);
 
-            //         SourceDestinationPair sourceDestinationPair = new SourceDestinationPair(parsedRequest.Response, "where in the source", usesAuth, "where in the destination");
+            //     if (dependents.Contains(parsedRequest)){
+            //         SourceDestinationPair sourceDestinationPair = new SourceDestinationPair(authRequest.Response, "where in the source", parsedRequest, "where in the destination");
+            //         FlowElements.Add(Tuple.Create(i, sourceDestinationPair));
+
+            //     } else {
+            //         SourceDestinationPair sourceDestinationPair = new SourceDestinationPair(null, "N/A", parsedRequest, "N/A");
+            //         FlowElements.Add(Tuple.Create(i, sourceDestinationPair));
+                    
             //     }
+                    
+                
+            //     i++;
             // }
             
         }
@@ -161,6 +139,117 @@ namespace UserReplay
 
     }
 
+    public class FlowRequests
+        {
+            public string Url { get; set; }
+            public HttpMethod Method { get; set; }
+            public Dictionary<string, string> QueryParams { get; set; }
+            public Dictionary<string, string> Headers { get; set; }
+            public string Body { get; set; }
+            public string RequestVersion { get; set; }
+            public Dictionary<string, string> Dependencies { get; set; }
+
+
+            public FlowRequests(JObject request, JObject response)
+            {
+                Url = request["url"].Value<string>();
+                Method = Enum.Parse<HttpMethod>(request["method"].Value<string>());
+                Headers = request.ContainsKey("headers") ? (request["headers"] as JArray).ToDictionary(h => h["name"].Value<string>(), h => h["value"].Value<string>()) : new Dictionary<string, string>();
+                QueryParams = request.ContainsKey("queryString") ? (request["queryString"] as JArray).DistinctBy(h => h["name"]).ToDictionary(q => q["name"].Value<string>(), q => q["value"].Value<string>()) : new Dictionary<string, string>();
+                Body = request.ContainsKey("postData") ? request["postData"]["text"].Value<string>() : "";
+                RequestVersion = request["httpVersion"].Value<string>();
+            }
+
+            internal static readonly string[] supportedHttpVersions = ["1.0", "1.1", "2.0", "3.0"];
+
+            public async Task<IFlurlResponse> Replay()
+            {
+                IFlurlRequest request = new FlurlRequest(Url).AllowAnyHttpStatus();
+                string[] splitHttpVersion = RequestVersion.Split("/");
+                if (splitHttpVersion.Length > 1 && supportedHttpVersions.Contains(splitHttpVersion[1]))
+                {
+                    request.WithSettings(s => s.HttpVersion = splitHttpVersion[1]);
+                }
+                else
+                {
+                    request.WithSettings(s => s.HttpVersion = "1.1");
+                }
+                foreach (var header in Headers)
+                {
+                    // skip headers that are not allowed with Flurl
+                    if (header.Key.StartsWith(":") || header.Key.Equals("content-length", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        request.WithHeader(header.Key, header.Value);
+                    }
+                }
+                foreach (var query in QueryParams)
+                {
+                    request.SetQueryParam(query.Key, query.Value);
+                }
+                return Method switch
+                {
+                    HttpMethod.GET => await request.GetAsync(),
+                    HttpMethod.POST => await request.PostStringAsync(Body),
+                    HttpMethod.PUT => await request.PutStringAsync(Body),
+                    HttpMethod.PATCH => await request.PatchStringAsync(Body),
+                    HttpMethod.OPTIONS => await request.OptionsAsync(),
+                    HttpMethod.DELETE => await request.DeleteAsync(),
+                    _ => throw new InvalidOperationException()
+                };
+            }
+
+
+
+        public override string ToString()
+            {
+                return $"REQUEST {Method} {Url} - {JObject.FromObject(QueryParams)}{(Method != HttpMethod.GET && !string.IsNullOrEmpty(Body) ? $"\nBody: {Body}" : "")} \n==>\n";
+            }
+    }
+
+    public class FlowResponse
+        {
+            public int Status { get; set; }
+            public Dictionary<string, string> Headers { get; set; }
+            public string Body { get; set; }
+            //Dictionary of the type of dependencies it requests for
+            public Dictionary<string, string> HasDependents { get; set; }
+
+            public FlowResponse(JObject response)
+            {
+                Status = response["status"].Value<int>();
+                Headers = response.ContainsKey("headers") ? (response["headers"] as JArray).DistinctBy(h => h["name"]).ToDictionary(h => h["name"].Value<string>(), h => h["value"].Value<string>()) : new Dictionary<string, string>();
+                Body = response["content"]?["text"]?.Value<string>() ?? "";
+            }
+            public FlowResponse(IFlurlResponse response)
+            {
+                Status = response.StatusCode;
+                Headers = response.Headers.DistinctBy(h => h.Name).ToDictionary(h => h.Name, h => h.Value);
+                Body = response.ResponseMessage.Content.ReadAsStringAsync().Result;
+            }
+
+            public override string ToString()
+            {
+                return $"RESPONSE {Status} : {(!string.IsNullOrEmpty(Body) ? $"\nBody: {(Body.Length > 200 ? Body[..200] + "......" : Body)}" : "")}\n";
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is ParsedResponse response &&
+                       Status == response.Status &&
+                        EqualityComparer<Dictionary<string, string>>.Default.Equals(Headers, response.Headers) &&
+                        Body.Trim() == response.Body.Trim();
+            }
+
+            public override int GetHashCode()
+            {
+                return HashCode.Combine(Status, Headers, Body);
+            }
+        }
+
     public class SourceDestinationPair{
         //one that needs to use auth request's response
         public ParsedRequest parsedRequest{get;set;}
@@ -171,23 +260,7 @@ namespace UserReplay
 
         public SourceDestinationPair(ParsedResponse parsedResponse, string source, ParsedRequest parsedRequest, string destination)
         {
-            
-            
-            if (source == "where in the source")
-            {
-                
-                JObject jObject = JObject.FromObject(parsedRequest);
-                if (jObject["access_token"] != null)
-                {
-                    jObject["access_token"] = "{{AccessTokenHere}}";
-                }
-                //error here
-                this.parsedRequest = jObject.ToObject<ParsedRequest>();
-                
-            } else {
-                this.parsedRequest = parsedRequest;
-            }
-            
+            this.parsedRequest = parsedRequest;
             this.parsedResponse = parsedResponse;
             this.source = source;
             this.destination = destination;
@@ -196,4 +269,21 @@ namespace UserReplay
         
 
     }
+    }
+
+    public enum HttpMethod
+        {
+            GET,
+            POST,
+            PUT,
+            DELETE,
+            PATCH,
+            OPTIONS,
+            HEAD,
+            /*
+            not needed for now
+            CONNECT,
+            TRACE
+            */
+        }
 }
