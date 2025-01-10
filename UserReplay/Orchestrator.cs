@@ -162,47 +162,6 @@ namespace UserReplay
 
             internal static readonly string[] supportedHttpVersions = ["1.0", "1.1", "2.0", "3.0"];
 
-            public async Task<IFlurlResponse> Replay()
-            {
-                IFlurlRequest request = new FlurlRequest(Url).AllowAnyHttpStatus();
-                string[] splitHttpVersion = RequestVersion.Split("/");
-                if (splitHttpVersion.Length > 1 && supportedHttpVersions.Contains(splitHttpVersion[1]))
-                {
-                    request.WithSettings(s => s.HttpVersion = splitHttpVersion[1]);
-                }
-                else
-                {
-                    request.WithSettings(s => s.HttpVersion = "1.1");
-                }
-                foreach (var header in Headers)
-                {
-                    // skip headers that are not allowed with Flurl
-                    if (header.Key.StartsWith(":") || header.Key.Equals("content-length", StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        continue;
-                    }
-                    else
-                    {
-                        request.WithHeader(header.Key, header.Value);
-                    }
-                }
-                foreach (var query in QueryParams)
-                {
-                    request.SetQueryParam(query.Key, query.Value);
-                }
-                return Method switch
-                {
-                    HttpMethod.GET => await request.GetAsync(),
-                    HttpMethod.POST => await request.PostStringAsync(Body),
-                    HttpMethod.PUT => await request.PutStringAsync(Body),
-                    HttpMethod.PATCH => await request.PatchStringAsync(Body),
-                    HttpMethod.OPTIONS => await request.OptionsAsync(),
-                    HttpMethod.DELETE => await request.DeleteAsync(),
-                    _ => throw new InvalidOperationException()
-                };
-            }
-
-
 
         public override string ToString()
             {
