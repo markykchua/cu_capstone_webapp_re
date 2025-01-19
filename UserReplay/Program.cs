@@ -21,7 +21,8 @@ class Program
         {
             var parsed = parser.ParseArguments(args,
                 typeof(Replay),
-                typeof(Parse)
+                typeof(Parse),
+                typeof(OrchestratorCLI)
             );
 
             await parsed.WithParsedAsync<Verb>(async verb =>
