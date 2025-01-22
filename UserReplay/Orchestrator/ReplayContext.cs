@@ -30,6 +30,7 @@ namespace UserReplay
                 Console.WriteLine($"Exported variable \"{export.Key}\": {export.Value}");
                 Exported[export.Key] = export.Value;
             }
+            Completed.Add(current);
             return current;
         }
     }

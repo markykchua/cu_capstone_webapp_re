@@ -49,7 +49,6 @@ namespace UserReplay
 
         public static JObject GenerateSchema(string body, string contentType)
         {
-            Log.Information($"Generating schema for {contentType}");
             if (contentType == "application/x-www-form-urlencoded")
             {
                 return FromUrlFormEncoded(body);
