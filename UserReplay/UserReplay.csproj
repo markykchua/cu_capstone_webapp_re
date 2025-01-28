@@ -13,6 +13,7 @@
       <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
       <PackageReference Include="serilog" Version="4.0.0" />
       <PackageReference Include="serilog.sinks.console" Version="6.0.0" />
+      <PackageReference Include="System.Composition" Version="8.0.0" />
   </ItemGroup>
 
 </Project>
