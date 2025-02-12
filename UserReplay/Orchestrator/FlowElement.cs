@@ -6,7 +6,7 @@ namespace UserReplay
 {
     public class FlowElement
     {
-        private static readonly Regex PlaceholderRegex = new(@".*({{(\w+)}}).*", RegexOptions.Compiled);
+        private static readonly Regex PlaceholderRegex = new(@".*(?'placeholder'{{(?'key'\w+)}}).*", RegexOptions.Compiled);
         public JObject Value => GetJsonValue();
         public ParsedRequest Request { get; private set; }
         private JsonBinding RequestBody { get; set; }
@@ -88,9 +88,9 @@ namespace UserReplay
             {
                 string value = stringToken.Value.ToString();
                 var match = PlaceholderRegex.Match(value);
-                if (match.Success && match.Groups[1].Value == value)
+                if (match.Success && match.Groups["placeholder"].Value == value)
                 {
-                    string key = match.Groups[2].Value;
+                    string key = match.Groups["key"].Value;
                     if (variables.ContainsKey(key))
                     {
                         stringToken.Replace(variables[key]);
@@ -100,8 +100,9 @@ namespace UserReplay
                 {
                     string result = PlaceholderRegex.Replace(value, match =>
                     {
-                        string key = match.Groups[2].Value;
-                        return variables.ContainsKey(key) ? variables[key].ToString() : match.Value;
+                        string key = match.Groups["key"].Value;
+                        string placeholder = match.Groups["placeholder"].Value;
+                        return match.Value.Replace(placeholder, variables.ContainsKey(key) ? variables[key].ToString() : placeholder);
                     });
                     stringToken.Value = result;
                 }

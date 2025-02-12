@@ -59,6 +59,9 @@ namespace UserReplay
                         var result = await ReplayContext.PlayNext();
                         Console.WriteLine($"Sent Request {result.Request.Method} to {result.Request.Url} and got response:\n{result.Value["Response"]}");
                         break;
+                    case "Display previous element":
+                        Console.WriteLine($"Previous element:{ReplayContext.Completed.Last()}");
+                        break;
                     case "Display flow":
                         foreach (FlowElement flowElement in Orchestrator.UserFlow)
                         {
@@ -99,6 +102,10 @@ namespace UserReplay
             }
             else
             {
+                if (ReplayContext.Completed.Count != 0)
+                {
+                    options = [.. options, "Display previous element"];
+                }
                 options = [.. options, "Display next element", "Play next element", "Show relation variables", "Save Flow file"];
             }
             options.Add("Exit");
