@@ -1,23 +1,51 @@
 using System.Globalization;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using Flurl;
 using Flurl.Http;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace UserReplay
 {
 
+    [Serializable]
     public class ParsedRequest
     {
+        [JsonProperty("url")]
         public string Url { get; set; }
+        [JsonProperty("method")]
         public HttpMethod Method { get; set; }
+        [JsonProperty("queryParams")]
         public Dictionary<string, string> QueryParams { get; set; }
+        [JsonProperty("headers")]
         public Dictionary<string, string> Headers { get; set; }
+        [JsonProperty("body")]
         public string Body { get; set; }
+        [Newtonsoft.Json.JsonIgnore]
         public ParsedResponse Response { get; set; }
+        [JsonProperty("startTime")]
         public DateTime StartTime { get; set; }
+        [JsonProperty("callDuration")]
         public TimeSpan CallDuration { get; set; }
+        [JsonProperty("requestVersion")]
         public string RequestVersion { get; set; }
+        [JsonProperty("cookies")]
         public Dictionary<string, string> Cookies { get; set; }
+
+        [Newtonsoft.Json.JsonConstructor]
+        public ParsedRequest(Url url, HttpMethod method, Dictionary<string, string> queryParams, Dictionary<string, string> headers, string body, DateTime startTime, TimeSpan callDuration, string requestVersion, Dictionary<string, string> cookies)
+        {
+            Url = url;
+            Method = method;
+            QueryParams = queryParams;
+            Headers = headers;
+            Body = body;
+            StartTime = startTime;
+            CallDuration = callDuration;
+            RequestVersion = requestVersion;
+            Cookies = cookies;
+        }
 
         public ParsedRequest(JObject request, JObject response)
         {

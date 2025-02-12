@@ -172,13 +172,13 @@ namespace UserReplay
 
         public class Session
         {
-            public List<ParsedRequest> Requests { get; set; } = new();
+            public List<FlowElement> Requests { get; set; } = new();
             public Session(JObject har)
             {
                 var entries = har["log"]["entries"];
                 foreach (var entry in entries.Cast<JObject>())
                 {
-                    ParsedRequest request = new(entry["request"] as JObject, entry["response"] as JObject);
+                    FlowElement request = new(entry["request"] as JObject, entry["response"] as JObject);
                     request.SetTime(entry["startedDateTime"].Value<string>(), entry["time"].Value<double>());
                     Requests.Add(request);
                 }
@@ -194,12 +194,12 @@ namespace UserReplay
                 return Requests.Where(r => new Uri(r.Url).Host == host).Select(r => new Uri(r.Url).AbsolutePath).Distinct().ToList();
             }
 
-            public List<ParsedRequest> GetAuthRequests()
+            public List<FlowElement> GetAuthRequests()
             {
                 return Requests.Select(r => AuthInfo.GetAuthInfo(r, this) is BearerAuth bearerAuth ? bearerAuth.AuthRequest : null).Where(a => a != null).Distinct().ToList();
             }
 
-            public List<ParsedRequest> GetAuthRequestUses(ParsedRequest authRequest)
+            public List<FlowElement> GetAuthRequestUses(FlowElement authRequest)
             {
                 return Requests.Where(r => AuthInfo.GetAuthInfo(r, this) is BearerAuth bearerAuth && bearerAuth.AuthRequest == authRequest).ToList();
             }
@@ -215,7 +215,7 @@ namespace UserReplay
         public abstract class AuthInfo
         {
 
-            public static AuthInfo GetAuthInfo(ParsedRequest request, Session session)
+            public static AuthInfo GetAuthInfo(FlowElement request, Session session)
             {
                 if (!request.Headers.TryGetValue("authorization", out string authHeader))
                 {
@@ -253,7 +253,7 @@ namespace UserReplay
             public string Username { get; set; }
             public string Password { get; set; }
 
-            public BasicAuth(ParsedRequest request)
+            public BasicAuth(FlowElement request)
             {
                 string authHeader = request.Headers["authorization"];
                 string[] split = Encoding.UTF8.GetString(Convert.FromBase64String(authHeader.Split(" ")[1])).Split(":");
@@ -270,15 +270,15 @@ namespace UserReplay
         public class BearerAuth : AuthInfo
         {
             public string Token { get; set; }
-            public ParsedRequest AuthRequest { get; set; }
+            public FlowElement AuthRequest { get; set; }
 
-            public BearerAuth(ParsedRequest request, Session session)
+            public BearerAuth(FlowElement request, Session session)
             {
                 Token = request.Headers["authorization"].Split(" ")[1];
                 AuthRequest = GetTokenOrigin(session);
             }
 
-            public ParsedRequest GetTokenOrigin(Session session)
+            public FlowElement GetTokenOrigin(Session session)
             {
                 foreach (var request in session.Requests)
                 {

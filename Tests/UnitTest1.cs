@@ -63,7 +63,7 @@ public class Tests
             var har2 = JObject.Parse(File.ReadAllText("exampleAuth.har"));
             Session session2 = new(har2);
 
-            List<ParsedRequest> pr = session2.GetAuthRequests();
+            List<UserReplay.FlowElement> pr = session2.GetAuthRequests();
 
             Assert.IsNotEmpty(pr.ElementAt(0).ToString());
         }
@@ -74,8 +74,8 @@ public class Tests
             var har2 = JObject.Parse(File.ReadAllText("exampleAuth.har"));
             Session session2 = new(har2);
 
-            List<ParsedRequest> pr = session2.GetAuthRequests();
-            List<ParsedRequest> RequestsUsingAuth = session2.GetAuthRequestUses(pr.ElementAt(0));
+            List<UserReplay.FlowElement> pr = session2.GetAuthRequests();
+            List<UserReplay.FlowElement> RequestsUsingAuth = session2.GetAuthRequestUses(pr.ElementAt(0));
 
             TestContext.WriteLine(session2.Requests.Count);
             TestContext.WriteLine(RequestsUsingAuth.Count);
@@ -88,7 +88,7 @@ public class Tests
 
     public class ParsedRequestTests{
         private Session session;
-        public List<ParsedRequest> Requests;
+        public List<UserReplay.FlowElement> Requests;
 
         [SetUp]
         public void Setup()
@@ -102,26 +102,26 @@ public class Tests
 
         [Test]
         public void ParsedRequest_UrlTemplate_Test(){
-            ParsedRequest parsedRequest = Requests[0];
+            UserReplay.FlowElement parsedRequest = Requests[0];
             Assert.AreEqual("/gtm.js",parsedRequest.UrlTemplate());
         }
 
         [Test]
         public async Task ParsedRequest_ReplayAsync(){
             Assert.Pass();
-            List<ParsedRequest> bearerAuthRequests = session.GetAuthRequests();
-                    foreach (ParsedRequest request in session.Requests)
+            List<UserReplay.FlowElement> bearerAuthRequests = session.GetAuthRequests();
+                    foreach (UserReplay.FlowElement request in session.Requests)
                     {
                         IFlurlResponse response = await request.Replay();
                         if (bearerAuthRequests.Contains(request))
                         {
                             string token = JToken.Parse(await response.ResponseMessage.Content.ReadAsStringAsync())["access_token"].ToString();
-                            foreach (ParsedRequest authUse in session.GetAuthRequestUses(request))
+                            foreach (UserReplay.FlowElement authUse in session.GetAuthRequestUses(request))
                             {
                                 authUse.Headers["Authorization"] = $"Bearer {token}";
                             }
                         }
-                        ParsedResponse parsedResponse = new(response);
+                        UserReplay.ParsedResponse parsedResponse = new(response);
                         Log.Information(request.ToString());
                         Log.Information(parsedResponse.ToString());
                         if (parsedResponse != request.Response)
@@ -147,7 +147,7 @@ public class Tests
 
     public class ParsedResponseTests{
         private Session session;
-        public ParsedResponse parsedResponse;
+        public UserReplay.ParsedResponse parsedResponse;
 
         [SetUp]
         public void Setup()
@@ -190,7 +190,7 @@ public class Tests
     }
     public class BearerAuthTests{
         private Session session;
-        public List<ParsedRequest> Requests;
+        public List<UserReplay.FlowElement> Requests;
 
         [SetUp]
         public void Setup(){

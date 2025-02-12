@@ -28,14 +28,14 @@ namespace UserReplay
                     var har = JObject.Parse(File.ReadAllText(FileName));
                     // naive implementation
                     Session session = new(har);
-                    List<ParsedRequest> bearerAuthRequests = session.GetAuthRequests();
-                    foreach (ParsedRequest request in session.Requests)
+                    List<FlowElement> bearerAuthRequests = session.GetAuthRequests();
+                    foreach (FlowElement request in session.Requests)
                     {
                         IFlurlResponse response = await request.Replay();
                         if (bearerAuthRequests.Contains(request))
                         {
                             string token = JToken.Parse(await response.ResponseMessage.Content.ReadAsStringAsync())["access_token"].ToString();
-                            foreach (ParsedRequest authUse in session.GetAuthRequestUses(request))
+                            foreach (FlowElement authUse in session.GetAuthRequestUses(request))
                             {
                                 authUse.Headers["Authorization"] = $"Bearer {token}";
                             }

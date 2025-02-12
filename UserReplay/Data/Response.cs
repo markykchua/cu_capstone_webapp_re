@@ -1,5 +1,6 @@
 using Flurl.Http;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 
 namespace UserReplay
 {
@@ -25,6 +26,15 @@ namespace UserReplay
             Headers = response.Headers.DistinctBy(h => h.Name).ToDictionary(h => h.Name, h => h.Value);
             Body = response.ResponseMessage.Content.ReadAsStringAsync().Result;
             Cookies = response.Cookies.ToDictionary(c => c.Name, c => c.Value);
+        }
+
+        [JsonConstructor]
+        public ParsedResponse(int status, Dictionary<string, string> headers, string body, Dictionary<string, string> cookies)
+        {
+            Status = status;
+            Headers = headers;
+            Body = body;
+            Cookies = cookies;
         }
 
         public override string ToString()
