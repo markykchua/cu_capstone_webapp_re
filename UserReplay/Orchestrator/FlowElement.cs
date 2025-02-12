@@ -12,8 +12,15 @@ namespace UserReplay
         private JsonBinding RequestBody { get; set; }
         private JsonBinding ResponseBody { get; set; }
         private Dictionary<string, Export> Exports = [];
+
+        public FlowElement(FlowElement r)
+        {
+
+        }
         public FlowElement(ParsedRequest request)
         {
+            Request = request ?? throw new ArgumentNullException(nameof(request));
+
             Request = request;
             string requestContentType = Utils.ContentType(request.Headers, request.Body);
 
@@ -25,6 +32,7 @@ namespace UserReplay
                 "text/plain" => ContentType.TEXT,
                 _ => ContentType.TEXT
             });
+            
             string responseContentType = Utils.ContentType(request.Response.Headers, request.Response.Body);
             ResponseBody = new JsonBinding(request.Response.Body, responseContentType switch
             {

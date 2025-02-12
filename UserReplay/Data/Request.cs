@@ -1,11 +1,14 @@
 using System.Globalization;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using Flurl;
 using Flurl.Http;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-
 namespace UserReplay
 {
 
+    [Serializable]
     public class ParsedRequest
     {
         public string Url { get; set; }
@@ -18,6 +21,21 @@ namespace UserReplay
         public TimeSpan CallDuration { get; set; }
         public string RequestVersion { get; set; }
         public Dictionary<string, string> Cookies { get; set; }
+
+        [Newtonsoft.Json.JsonConstructorAttribute]
+        public ParsedRequest(Url url, HttpMethod method, Dictionary<string, string> queryParams, Dictionary<string, string> headers, string body, ParsedResponse response, DateTime startTime, TimeSpan callDuration, string requestVersion, Dictionary<string, string> cookies)
+        {
+            Url = url;
+            Method = method;
+            QueryParams = queryParams;
+            Headers = headers;
+            Body = body;
+            Response = response;
+            StartTime = startTime;
+            CallDuration = callDuration;
+            RequestVersion = requestVersion;
+            Cookies = cookies;
+        }
 
         public ParsedRequest(JObject request, JObject response)
         {

@@ -1,6 +1,9 @@
 using System.Composition.Hosting;
 using System.Reflection;
 using static UserReplay.Parse;
+using System.Text.Json;
+using System.IO;
+using Newtonsoft.Json.Linq;
 
 namespace UserReplay
 {
@@ -19,19 +22,24 @@ namespace UserReplay
 
         public void LoadUserFlow(string fileName)
         {
-            string fileContents = File.ReadAllText(fileName);
+            //string fileContents = File.ReadAllText(fileName);
+            //UserFlow = JsonSerializer.Deserialize<List<FlowElement>>(fileContents);
 
-            // need to determine file contents / the storage format
+            string fileContents = File.ReadAllText(fileName);
+            JToken token = JToken.Parse(fileContents);
+            List<ParsedRequest> requestsToLoad = token.ToObject<List<ParsedRequest>>();
+            System.Console.WriteLine($"Loaded {requestsToLoad.Count} elements");
+
+            UserFlow = requestsToLoad.Select(r => new FlowElement(r)).ToList();
         }
 
         public void SaveUserFlow(string fileName)
         {
-            string path = "";
+            List<ParsedRequest> requestsToSave = UserFlow.Select(r => r.Request).ToList();
 
-            string flowContents = "";
-            // need to determine file contents / the storage format
+            string flowContents = JsonSerializer.Serialize(requestsToSave);
+            File.WriteAllText(fileName, flowContents);
 
-            File.WriteAllText(path + fileName, flowContents);
         }
 
         public void FindRelations()

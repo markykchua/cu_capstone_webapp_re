@@ -36,6 +36,18 @@ namespace UserReplay
                             Orchestrator = Orchestrator.FromSession(session);
                         }
                         break;
+                    case "Load Flow file":
+                        string flowFileName = GetUserInput("Enter the Flow file name");
+                        if (File.Exists(flowFileName))
+                        {
+                            Orchestrator.LoadUserFlow(flowFileName);
+                        }
+                        break;
+                    case "Save Flow file":
+                        string flowFileSaveName = GetUserInput("Enter the name to save the Flow file as")  + ".json";
+                        Orchestrator.SaveUserFlow(flowFileSaveName);
+                        Console.WriteLine($"Saved {Orchestrator.UserFlow.Count} elements to file ");
+                        break;
                     case "Start Replay":
                         ReplayContext = new ReplayContext(Orchestrator.UserFlow);
                         Console.WriteLine($"Started replay with {Orchestrator.UserFlow.Count} elements");
@@ -79,14 +91,15 @@ namespace UserReplay
             if (Orchestrator.UserFlow.Count == 0)
             {
                 options.Add("Load HAR file");
+                options.Add("Load Flow file");
             }
             else if (ReplayContext is null)
             {
-                options = [.. options, "Find relations", "Start Replay", "Display flow"];
+                options = [.. options, "Find relations", "Start Replay", "Display flow", "Save Flow file"];
             }
             else
             {
-                options = [.. options, "Display next element", "Play next element", "Show relation variables"];
+                options = [.. options, "Display next element", "Play next element", "Show relation variables", "Save Flow file"];
             }
             options.Add("Exit");
             return options;
