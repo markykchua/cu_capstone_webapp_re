@@ -102,11 +102,11 @@ namespace UserReplay
             }
             else
             {
+                options = [.. options, "Display next element", "Play next element", "Show relation variables"];
                 if (ReplayContext.Completed.Count != 0)
                 {
                     options = [.. options, "Display previous element"];
                 }
-                options = [.. options, "Display next element", "Play next element", "Show relation variables", "Save Flow file"];
             }
             options.Add("Exit");
             return options;
