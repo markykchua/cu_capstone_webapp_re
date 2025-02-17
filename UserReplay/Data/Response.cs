@@ -13,7 +13,7 @@ namespace UserReplay
         public string Body { get; set; }
         public Dictionary<string, string> Cookies { get; set; }
 
-        [Newtonsoft.Json.JsonConstructorAttribute]
+        [Newtonsoft.Json.JsonConstructor]
         public ParsedResponse(int status, Dictionary<string, string> headers, string body, Dictionary<string, string> cookies)
         {
             Status = status;

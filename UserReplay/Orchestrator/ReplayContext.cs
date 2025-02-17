@@ -10,9 +10,9 @@ namespace UserReplay
         public Queue<FlowElement> FlowElements = new();
         public List<FlowElement> Completed = new();
         public Dictionary<string, JToken> Exported = new();
-        public ReplayContext(List<FlowElement> elements)
+        public ReplayContext(UserFlow flow)
         {
-            FlowElements = new Queue<FlowElement>(elements);
+            FlowElements = new Queue<FlowElement>(flow.FlowElements);
         }
 
         public async Task<FlowElement> PlayNext()

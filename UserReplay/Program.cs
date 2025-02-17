@@ -20,7 +20,6 @@ class Program
         try
         {
             var parsed = parser.ParseArguments(args,
-                typeof(Replay),
                 typeof(Parse),
                 typeof(OrchestratorCLI)
             );

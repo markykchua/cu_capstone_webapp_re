@@ -16,7 +16,6 @@ namespace UserReplay
         public Dictionary<string, string> QueryParams { get; set; }
         public Dictionary<string, string> Headers { get; set; }
         public string Body { get; set; }
-        public ParsedResponse Response { get; set; }
         public DateTime StartTime { get; set; }
         public TimeSpan CallDuration { get; set; }
         public string RequestVersion { get; set; }
@@ -30,20 +29,18 @@ namespace UserReplay
             QueryParams = queryParams;
             Headers = headers;
             Body = body;
-            Response = response;
             StartTime = startTime;
             CallDuration = callDuration;
             RequestVersion = requestVersion;
             Cookies = cookies;
         }
 
-        public ParsedRequest(JObject request, JObject response)
+        public ParsedRequest(JObject request)
         {
             Url = request["url"].Value<string>();
             Method = Enum.Parse<HttpMethod>(request["method"].Value<string>());
             Headers = request.ContainsKey("headers") ? (request["headers"] as JArray).ToDictionary(h => h["name"].Value<string>(), h => h["value"].Value<string>()) : new Dictionary<string, string>();
             QueryParams = request.ContainsKey("queryString") ? (request["queryString"] as JArray).DistinctBy(h => h["name"]).ToDictionary(q => q["name"].Value<string>(), q => q["value"].Value<string>()) : new Dictionary<string, string>();
-            Response = new ParsedResponse(response);
             Body = request.ContainsKey("postData") ? request["postData"]["text"].Value<string>() : "";
             Cookies = (request["cookies"] as JArray).ToDictionary(c => c["name"].Value<string>(), c => c["value"].Value<string>());
             RequestVersion = request["httpVersion"].Value<string>();
@@ -127,7 +124,7 @@ namespace UserReplay
 
         public override string ToString()
         {
-            return $"REQUEST {Method} {Url} - {JObject.FromObject(QueryParams)}{(Method != HttpMethod.GET && !string.IsNullOrEmpty(Body) ? $"\nBody: {Body}" : "")} \n==>\n{Response}\n";
+            return $"REQUEST {Method} {Url} - {JObject.FromObject(QueryParams)}{(Method != HttpMethod.GET && !string.IsNullOrEmpty(Body) ? $"\nBody: {Body}" : "")}\n";
         }
     }
 
