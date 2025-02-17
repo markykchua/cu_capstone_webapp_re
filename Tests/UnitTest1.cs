@@ -5,6 +5,7 @@ using System.Net;
 using Newtonsoft.Json.Linq;
 using System.CodeDom.Compiler;
 using Flurl.Http;
+using UserReplay;
 //using UserReplay.Orchestrator;
 
 
@@ -14,80 +15,77 @@ public class Tests
 {
 
 
-    public class OrchestratorTests{
-        private Session session;
+    public class OrchestratorTests
+    {
+        private UserFlow flow;
         //private Orchestrator orchestrator;
 
         [SetUp]
-        public void SetUp(){
+        public void SetUp()
+        {
             var har = JObject.Parse(File.ReadAllText("exampleAuth.har"));
-            session = new(har);
+            flow = UserFlow.FromHar(har);
         }
 
         [Test]
-        public void orchTest1(){
-
-
+        public void orchTest1()
+        {
             Assert.Pass();
-
-            
         }
     }
 
-    public class sessionTests{
-        private Session session;
+    public class sessionTests
+    {
+        private UserFlow flow;
         [SetUp]
         public void Setup()
         {
-
             var har = JObject.Parse(File.ReadAllText("www.tesla.com.har"));
-            session = new(har);
+            flow = UserFlow.FromHar(har);
         }
 
         [Test]
-        public void Session_GetHosts_Test()
+        public void UserFlow_GetHosts_Test()
         {
-            List<String> getHostsList = new List<String> {"www.googletagmanager.com", "cdn.optimizely.com", "location-services-prd.tesla.com"};
-            Assert.AreEqual(session.GetHosts(),getHostsList);
+            List<String> getHostsList = new List<String> { "www.googletagmanager.com", "cdn.optimizely.com", "location-services-prd.tesla.com" };
+            Assert.That(getHostsList, Is.EqualTo(Utils.GetHosts(flow.FlowElements)));
         }
 
         [Test]
-        public void Session_GetEndPointsForHost_Test()
+        public void UserFlow_GetEndPointsForHost_Test()
         {
-            List<String> getHostsList = new List<String> {"/gtm.js"};
-            Assert.AreEqual(session.GetEndPointsForHost("www.googletagmanager.com"),getHostsList);
+            List<String> getHostsList = new List<String> { "/gtm.js" };
+            Assert.That(getHostsList, Is.EqualTo(Utils.GetEndPointsForHost(flow.FlowElements, "www.googletagmanager.com")));
         }
 
         [Test]
-        public void Session_GetAuthRequests_Test(){
-            var har2 = JObject.Parse(File.ReadAllText("exampleAuth.har"));
-            Session session2 = new(har2);
-
-            List<ParsedRequest> pr = session2.GetAuthRequests();
-
-            Assert.IsNotEmpty(pr.ElementAt(0).ToString());
-        }
-
-        [Test]
-        public void Session_GetAuthRequestUses_Test()
+        public void UserFlow_GetAuthRequests_Test()
         {
             var har2 = JObject.Parse(File.ReadAllText("exampleAuth.har"));
-            Session session2 = new(har2);
+            UserFlow flow2 = UserFlow.FromHar(har2);
+            Orchestrator temp = new Orchestrator(flow2);
+            temp.FindRelations();
 
-            List<ParsedRequest> pr = session2.GetAuthRequests();
-            List<ParsedRequest> RequestsUsingAuth = session2.GetAuthRequestUses(pr.ElementAt(0));
+            Assert.IsNotEmpty(temp.CurrentFlow.FlowElements.Where(e => e.GetExported().Where(ex => ex.Key.StartsWith(BearerAuthRelation.TokenVariableName)).Any()));
+        }
 
-            TestContext.WriteLine(session2.Requests.Count);
-            TestContext.WriteLine(RequestsUsingAuth.Count);
+        [Test]
+        public void UserFlow_GetAuthRequestUses_Test()
+        {
+            var har2 = JObject.Parse(File.ReadAllText("exampleAuth.har"));
+            UserFlow flow2 = UserFlow.FromHar(har2);
+            Orchestrator temp = new Orchestrator(flow2);
+            temp.FindRelations();
 
-            Assert.IsNotEmpty(RequestsUsingAuth.ElementAt(0).ToString());
+            Assert.IsNotEmpty(temp.CurrentFlow.FlowElements.Where(e => e.Value.Descendants().OfType<JValue>().Select(v => v.ToString()).Any(s => s.StartsWith("Bearer {{{{"))));
         }
 
 
     }
 
-    public class ParsedRequestTests{
-        private Session session;
+    public class ParsedRequestTests
+    {
+        private UserFlow flow;
         public List<ParsedRequest> Requests;
 
         [SetUp]
@@ -95,123 +93,133 @@ public class Tests
         {
 
             var har = JObject.Parse(File.ReadAllText("www.tesla.com.har"));
-            session = new(har);
-            Requests = session.Requests;
+            flow = UserFlow.FromHar(har);
+            Requests = [.. flow.FlowElements.Select(e => e.Request)];
 
         }
 
         [Test]
-        public void ParsedRequest_UrlTemplate_Test(){
+        public void ParsedRequest_UrlTemplate_Test()
+        {
             ParsedRequest parsedRequest = Requests[0];
-            Assert.AreEqual("/gtm.js",parsedRequest.UrlTemplate());
+            Assert.That(parsedRequest.UrlTemplate(), Is.EqualTo("/gtm.js"));
         }
 
-        [Test]
-        public async Task ParsedRequest_ReplayAsync(){
+        /*[Test] needs changing
+        public async Task ParsedRequest_ReplayAsync()
+        {
             Assert.Pass();
-            List<ParsedRequest> bearerAuthRequests = session.GetAuthRequests();
-                    foreach (ParsedRequest request in session.Requests)
+            List<ParsedRequest> bearerAuthRequests = flow.GetAuthRequests();
+            foreach (ParsedRequest request in flow.Requests)
+            {
+                IFlurlResponse response = await request.Replay();
+                if (bearerAuthRequests.Contains(request))
+                {
+                    string token = JToken.Parse(await response.ResponseMessage.Content.ReadAsStringAsync())["access_token"].ToString();
+                    foreach (ParsedRequest authUse in flow.GetAuthRequestUses(request))
                     {
-                        IFlurlResponse response = await request.Replay();
-                        if (bearerAuthRequests.Contains(request))
-                        {
-                            string token = JToken.Parse(await response.ResponseMessage.Content.ReadAsStringAsync())["access_token"].ToString();
-                            foreach (ParsedRequest authUse in session.GetAuthRequestUses(request))
-                            {
-                                authUse.Headers["Authorization"] = $"Bearer {token}";
-                            }
-                        }
-                        ParsedResponse parsedResponse = new(response);
-                        Log.Information(request.ToString());
-                        Log.Information(parsedResponse.ToString());
-                        if (parsedResponse != request.Response)
-                        {
-                            if (parsedResponse.Status >= 400)
-                            {
-                                Log.Error($"Request failed unexpectedly: {parsedResponse.Status}");
-                                Assert.Fail();
-                            }
-                            else
-                            {
-                                Log.Warning($"Request was successful but response did not match recorded response");
-                            }
-                        }
+                        authUse.Headers["Authorization"] = $"Bearer {token}";
                     }
-                    Assert.Pass();
-        }
+                }
+                ParsedResponse parsedResponse = new(response);
+                Log.Information(request.ToString());
+                Log.Information(parsedResponse.ToString());
+                if (parsedResponse != request.Response)
+                {
+                    if (parsedResponse.Status >= 400)
+                    {
+                        Log.Error($"Request failed unexpectedly: {parsedResponse.Status}");
+                        Assert.Fail();
+                    }
+                    else
+                    {
+                        Log.Warning($"Request was successful but response did not match recorded response");
+                    }
+                }
+            }
+            Assert.Pass();
+        }*/
 
 
 
     }
 
 
-    public class ParsedResponseTests{
-        private Session session;
+    public class ParsedResponseTests
+    {
+        private UserFlow flow;
         public ParsedResponse parsedResponse;
 
         [SetUp]
         public void Setup()
         {
             var har = JObject.Parse(File.ReadAllText("www.tesla.com.har"));
-            session = new(har);
-            parsedResponse = session.Requests[0].Response;
-
+            flow = UserFlow.FromHar(har);
+            parsedResponse = flow.FlowElements[0].Response;
         }
 
         [Test]
-        public void ParsedResponse_Equals(){
+        public void ParsedResponse_Equals()
+        {
             // parsed response changes based on the received response
 
             // var har2 = JObject.Parse(File.ReadAllText("www.tesla.com.har"));
-            // Session session2 = new(har2);
+            // UserFlow session2 = new(har2);
             // ParsedResponse parsedResponse2 = session2.Requests[0].Response;
 
             // Assert.True(parsedResponse.Equals(parsedResponse2));
         }
 
         [Test]
-        public void ParsedResponse_GetHashCode(){
+        public void ParsedResponse_GetHashCode()
+        {
             //hashcode changes based on response
 
             // int hashCode = parsedResponse.GetHashCode();
             // Assert.AreEqual(-1563660955,hashCode);
         }
     }
-    public class AuthInfoTests{
+    public class AuthInfoTests
+    {
         //GetAuthInfo
     }
 
-    public class NoneAuthTests{
+    public class NoneAuthTests
+    {
         //nothing
     }
 
-    public class BasicAuthTests{
+    public class BasicAuthTests
+    {
         // Only Constructor, get and set
     }
-    public class BearerAuthTests{
-        private Session session;
-        public List<ParsedRequest> Requests;
+    public class BearerAuthTests
+    {
+        private UserFlow flow;
 
         [SetUp]
-        public void Setup(){
+        public void Setup()
+        {
             var har = JObject.Parse(File.ReadAllText("www.reddit.com.har"));
-            session = new(har);
-            Requests = session.Requests;
+            flow = UserFlow.FromHar(har);
         }
 
         [Test]
-        public void BearerAuth_GetTokenOrigin_Test(){
+        public void BearerAuth_GetTokenOrigin_Test()
+        {
             // If the setup passes it is able to run GetTokenOrigin without error
             Assert.Pass();
         }
     }
 
-    public class OtherAuthTests{
+    public class OtherAuthTests
+    {
         // Only Constructor, get and set
     }
 
-    public class JTokenExtensionsTests{
+    public class JTokenExtensionsTests
+    {
         // TryParse
     }
-    
+
 }

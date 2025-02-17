@@ -9,6 +9,7 @@ namespace UserReplay
         private static readonly Regex PlaceholderRegex = new(@".*(?'placeholder'{{(?'key'\w+)}}).*", RegexOptions.Compiled);
         public JObject Value => GetJsonValue();
         public ParsedRequest Request { get; private set; }
+        public ParsedResponse Response { get; private set; }
         private JsonBinding RequestBody { get; set; }
         private JsonBinding ResponseBody { get; set; }
         private Dictionary<string, Export> Exports = [];
@@ -17,11 +18,12 @@ namespace UserReplay
         {
 
         }
-        public FlowElement(ParsedRequest request)
+        public FlowElement(ParsedRequest request, ParsedResponse response)
         {
             Request = request ?? throw new ArgumentNullException(nameof(request));
 
-            Request = request;
+            Response = response ?? throw new ArgumentNullException(nameof(response));
+
             string requestContentType = Utils.ContentType(request.Headers, request.Body);
 
             RequestBody = new JsonBinding(request.Body, requestContentType switch
@@ -32,9 +34,9 @@ namespace UserReplay
                 "text/plain" => ContentType.TEXT,
                 _ => ContentType.TEXT
             });
-            
-            string responseContentType = Utils.ContentType(request.Response.Headers, request.Response.Body);
-            ResponseBody = new JsonBinding(request.Response.Body, responseContentType switch
+
+            string responseContentType = Utils.ContentType(Response.Headers, Response.Body);
+            ResponseBody = new JsonBinding(Response.Body, responseContentType switch
             {
                 "application/json" => ContentType.JSON,
                 "application/xml" => ContentType.XML,
@@ -59,9 +61,9 @@ namespace UserReplay
                 },
                 ["Response"] = new JObject
                 {
-                    ["Status"] = Request.Response.Status,
-                    ["Headers"] = JToken.FromObject(Request.Response.Headers) as JObject,
-                    ["Cookies"] = JToken.FromObject(Request.Response.Cookies) as JObject,
+                    ["Status"] = Response.Status,
+                    ["Headers"] = JToken.FromObject(Response.Headers) as JObject,
+                    ["Cookies"] = JToken.FromObject(Response.Cookies) as JObject,
                     ["Body"] = ResponseBody.Value
                 }
             };
@@ -78,7 +80,7 @@ namespace UserReplay
 
         public void UpdateResponse(ParsedResponse response)
         {
-            Request.Response = response;
+            Response = response;
         }
 
         public void FillRequestPlaceholders(Dictionary<string, JToken> variables)

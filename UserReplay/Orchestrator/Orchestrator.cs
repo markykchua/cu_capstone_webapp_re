@@ -10,14 +10,11 @@ namespace UserReplay
     public class Orchestrator
     {
 
-        public List<FlowElement> UserFlow { get; set; } = new();
+        public UserFlow CurrentFlow { get; set; } = new();
 
-        public static Orchestrator FromSession(Session session)
+        public Orchestrator(UserFlow flow)
         {
-            return new Orchestrator()
-            {
-                UserFlow = [.. session.Requests.Select(r => new FlowElement(r))]
-            };
+            CurrentFlow = flow;
         }
 
         public void LoadUserFlow(string fileName)
@@ -28,18 +25,17 @@ namespace UserReplay
             string fileContents = File.ReadAllText(fileName);
             JToken token = JToken.Parse(fileContents);
             List<ParsedRequest> requestsToLoad = token.ToObject<List<ParsedRequest>>();
-            System.Console.WriteLine($"Loaded {requestsToLoad.Count} elements");
+            Console.WriteLine($"Loaded {requestsToLoad.Count} elements");
 
-            UserFlow = requestsToLoad.Select(r => new FlowElement(r)).ToList();
+            //CurrentFlow = requestsToLoad.Select(r => new FlowElement(r)).ToList();
         }
 
         public void SaveUserFlow(string fileName)
         {
-            List<ParsedRequest> requestsToSave = UserFlow.Select(r => r.Request).ToList();
+            JObject jsonFlow = JToken.FromObject(CurrentFlow) as JObject;
 
-            string flowContents = JsonSerializer.Serialize(requestsToSave);
+            string flowContents = jsonFlow.ToString();
             File.WriteAllText(fileName, flowContents);
-
         }
 
         public void FindRelations()
@@ -54,7 +50,7 @@ namespace UserReplay
             {
                 var relation = (IFlowRelation)Activator.CreateInstance(relationType);
                 Console.WriteLine($"Inserting {relation.GetType().Name}");
-                relation.InsertRelation(UserFlow);
+                relation.InsertRelation(CurrentFlow);
             }
         }
 
