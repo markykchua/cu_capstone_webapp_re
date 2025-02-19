@@ -1,37 +1,41 @@
 using System.Composition.Hosting;
 using System.Reflection;
 using static UserReplay.Parse;
+using System.Text.Json;
+using System.IO;
+using Newtonsoft.Json.Linq;
 
 namespace UserReplay
 {
     public class Orchestrator
     {
 
-        public List<FlowElement> UserFlow { get; set; } = new();
+        public UserFlow CurrentFlow { get; set; } = new();
 
-        public static Orchestrator FromSession(Session session)
+        public Orchestrator(UserFlow flow)
         {
-            return new Orchestrator()
-            {
-                UserFlow = [.. session.Requests.Select(r => new FlowElement(r))]
-            };
+            CurrentFlow = flow;
         }
 
         public void LoadUserFlow(string fileName)
         {
-            string fileContents = File.ReadAllText(fileName);
+            //string fileContents = File.ReadAllText(fileName);
+            //UserFlow = JsonSerializer.Deserialize<List<FlowElement>>(fileContents);
 
-            // need to determine file contents / the storage format
+            string fileContents = File.ReadAllText(fileName);
+            JToken token = JToken.Parse(fileContents);
+            List<ParsedRequest> requestsToLoad = token.ToObject<List<ParsedRequest>>();
+            Console.WriteLine($"Loaded {requestsToLoad.Count} elements");
+
+            //CurrentFlow = requestsToLoad.Select(r => new FlowElement(r)).ToList();
         }
 
         public void SaveUserFlow(string fileName)
         {
-            string path = "";
+            JObject jsonFlow = JToken.FromObject(CurrentFlow) as JObject;
 
-            string flowContents = "";
-            // need to determine file contents / the storage format
-
-            File.WriteAllText(path + fileName, flowContents);
+            string flowContents = jsonFlow.ToString();
+            File.WriteAllText(fileName, flowContents);
         }
 
         public void FindRelations()
@@ -46,7 +50,7 @@ namespace UserReplay
             {
                 var relation = (IFlowRelation)Activator.CreateInstance(relationType);
                 Console.WriteLine($"Inserting {relation.GetType().Name}");
-                relation.InsertRelation(UserFlow);
+                relation.InsertRelation(CurrentFlow);
             }
         }
 

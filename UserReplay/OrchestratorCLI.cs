@@ -10,7 +10,7 @@ namespace UserReplay
     public partial class OrchestratorCLI : Verb
     {
         private bool Exit = false;
-        public Orchestrator Orchestrator = new Orchestrator();
+        public Orchestrator Orchestrator = null;
         public ReplayContext ReplayContext = null;
         public override async Task<bool> Run()
         {
@@ -32,13 +32,25 @@ namespace UserReplay
                         {
                             string content = File.ReadAllText(fileName);
 
-                            Session session = new Session(JObject.Parse(content));
-                            Orchestrator = Orchestrator.FromSession(session);
+                            UserFlow flow = UserFlow.FromHar(JObject.Parse(content));
+                            Orchestrator = new Orchestrator(flow);
                         }
                         break;
+                    case "Load Flow file":
+                        string flowFileName = GetUserInput("Enter the Flow file name");
+                        if (File.Exists(flowFileName))
+                        {
+                            Orchestrator.LoadUserFlow(flowFileName);
+                        }
+                        break;
+                    case "Save Flow file":
+                        string flowFileSaveName = GetUserInput("Enter the name to save the Flow file as") + ".json";
+                        Orchestrator.SaveUserFlow(flowFileSaveName);
+                        Console.WriteLine($"Saved flow with {Orchestrator.CurrentFlow.FlowElements.Count} elements to file ");
+                        break;
                     case "Start Replay":
-                        ReplayContext = new ReplayContext(Orchestrator.UserFlow);
-                        Console.WriteLine($"Started replay with {Orchestrator.UserFlow.Count} elements");
+                        ReplayContext = new ReplayContext(Orchestrator.CurrentFlow);
+                        Console.WriteLine($"Started replay with {Orchestrator.CurrentFlow.FlowElements.Count} elements");
                         break;
                     case "Display next element":
                         Console.WriteLine($"Next element:{ReplayContext.FlowElements.Peek()}");
@@ -51,7 +63,7 @@ namespace UserReplay
                         Console.WriteLine($"Previous element:{ReplayContext.Completed.Last()}");
                         break;
                     case "Display flow":
-                        foreach (FlowElement flowElement in Orchestrator.UserFlow)
+                        foreach (FlowElement flowElement in Orchestrator.CurrentFlow.FlowElements)
                         {
                             Console.WriteLine(flowElement.Value);
                         }
@@ -79,13 +91,14 @@ namespace UserReplay
         private List<string> GetOptions()
         {
             List<string> options = new();
-            if (Orchestrator.UserFlow.Count == 0)
+            if (Orchestrator is null)
             {
                 options.Add("Load HAR file");
+                options.Add("Load Flow file");
             }
             else if (ReplayContext is null)
             {
-                options = [.. options, "Find relations", "Start Replay", "Display flow"];
+                options = [.. options, "Find relations", "Start Replay", "Display flow", "Save Flow file"];
             }
             else
             {

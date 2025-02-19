@@ -6,13 +6,14 @@ namespace UserReplay
 {
     public class BearerAuthRelation : IFlowRelation
     {
-        public void InsertRelation(List<FlowElement> flowElements)
+        public static string TokenVariableName = "extracted_auth_token_";
+        public void InsertRelation(UserFlow flow)
         {
             Dictionary<FlowElement, List<FlowElement>> authPairings = new();
 
-            Dictionary<string, FlowElement> responseBodies = flowElements.DistinctBy(r => r.Request.Response.Body).ToDictionary(e => e.Request.Response.Body, e => e);
+            Dictionary<string, FlowElement> responseBodies = flow.FlowElements.DistinctBy(r => r.Response.Body).ToDictionary(e => e.Response.Body, e => e);
 
-            foreach (FlowElement flowElement in flowElements.Where(e => e.Request.Headers.ContainsKey("Authorization") && e.Request.Headers["Authorization"].StartsWith("Bearer ")))
+            foreach (FlowElement flowElement in flow.FlowElements.Where(e => e.Request.Headers.ContainsKey("Authorization") && e.Request.Headers["Authorization"].StartsWith("Bearer ")))
             {
                 var token = flowElement.Request.Headers["Authorization"].Split("Bearer ")[1];
                 var authRequests = responseBodies.Where(r => r.Key.Contains(token)).Select(r => r.Value);
@@ -31,10 +32,10 @@ namespace UserReplay
             {
                 authCount++;
                 Console.WriteLine($"Found auth request ({pair.Key.Request.Url}) with {pair.Value.Count} uses");
-                pair.Key.AddExport($"auth_token_{authCount}", new Export("$.Response.Body.access_token"));
+                pair.Key.AddExport($"extracted_auth_token_{authCount}", new Export("$.Response.Body.access_token"));
                 foreach (FlowElement element in pair.Value)
                 {
-                    element.Request.Headers["Authorization"] = $"Bearer {{{{auth_token_{authCount}}}}}";
+                    element.Request.Headers["Authorization"] = $"Bearer {{{{extracted_auth_token_{authCount}}}}}";
                 }
             }
         }

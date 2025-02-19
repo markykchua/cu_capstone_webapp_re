@@ -5,6 +5,7 @@ namespace UserReplay
 {
 
 
+    [Serializable]
     public class ParsedResponse
     {
         public int Status { get; set; }
@@ -12,6 +13,14 @@ namespace UserReplay
         public string Body { get; set; }
         public Dictionary<string, string> Cookies { get; set; }
 
+        [Newtonsoft.Json.JsonConstructor]
+        public ParsedResponse(int status, Dictionary<string, string> headers, string body, Dictionary<string, string> cookies)
+        {
+            Status = status;
+            Headers = headers;
+            Body = body;
+            Cookies = cookies;
+        }
         public ParsedResponse(JObject response)
         {
             Status = response["status"].Value<int>();
