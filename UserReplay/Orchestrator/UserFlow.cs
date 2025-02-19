@@ -6,6 +6,7 @@ public class UserFlow
 {
 
     public List<FlowElement> FlowElements = new();
+    public Dictionary<string, JToken> ExternalVariables = new();
 
     public static UserFlow FromHar(JObject har)
     {

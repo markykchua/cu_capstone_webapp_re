@@ -13,6 +13,7 @@ namespace UserReplay
         public ReplayContext(UserFlow flow)
         {
             FlowElements = new Queue<FlowElement>(flow.FlowElements);
+            Exported = new(flow.ExternalVariables);
         }
 
         public async Task<FlowElement> PlayNext()
