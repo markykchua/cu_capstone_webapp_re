@@ -17,17 +17,13 @@ namespace UserReplay
             CurrentFlow = flow;
         }
 
-        public void LoadUserFlow(string fileName)
+        public static Orchestrator LoadFromFile(string fileName)
         {
-            //string fileContents = File.ReadAllText(fileName);
-            //UserFlow = JsonSerializer.Deserialize<List<FlowElement>>(fileContents);
-
             string fileContents = File.ReadAllText(fileName);
             JToken token = JToken.Parse(fileContents);
-            List<ParsedRequest> requestsToLoad = token.ToObject<List<ParsedRequest>>();
-            Console.WriteLine($"Loaded {requestsToLoad.Count} elements");
-
-            //CurrentFlow = requestsToLoad.Select(r => new FlowElement(r)).ToList();
+            UserFlow loadedFlow = token.ToObject<UserFlow>();
+            Console.WriteLine($"Loaded {loadedFlow.FlowElements.Count} elements");
+            return new Orchestrator(loadedFlow);
         }
 
         public void SaveUserFlow(string fileName)

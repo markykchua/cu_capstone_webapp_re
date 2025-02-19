@@ -40,7 +40,11 @@ namespace UserReplay
                         string flowFileName = GetUserInput("Enter the Flow file name");
                         if (File.Exists(flowFileName))
                         {
-                            Orchestrator.LoadUserFlow(flowFileName);
+                            Orchestrator = Orchestrator.LoadFromFile(flowFileName);
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Couldn't find file with name {flowFileName} in {Directory.GetCurrentDirectory()}");
                         }
                         break;
                     case "Save Flow file":
@@ -53,6 +57,7 @@ namespace UserReplay
                         Console.WriteLine($"Started replay with {Orchestrator.CurrentFlow.FlowElements.Count} elements");
                         break;
                     case "Display next element":
+                        Console.WriteLine($"{JToken.FromObject(Orchestrator.CurrentFlow.FlowElements.First())}");
                         Console.WriteLine($"Next element:{ReplayContext.FlowElements.Peek()}");
                         break;
                     case "Play next element":

@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Flurl;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace UserReplay
@@ -7,26 +8,36 @@ namespace UserReplay
     public class FlowElement
     {
         private static readonly Regex PlaceholderRegex = new(@".*(?'placeholder'{{(?'key'\w+)}}).*", RegexOptions.Compiled);
+        [JsonIgnore]
         public JObject Value => GetJsonValue();
         public ParsedRequest Request { get; private set; }
         public ParsedResponse Response { get; private set; }
         private JsonBinding RequestBody { get; set; }
         private JsonBinding ResponseBody { get; set; }
-        private Dictionary<string, Export> Exports = [];
-
-        public FlowElement(FlowElement r)
+        public Dictionary<string, Export> Exports = [];
+        [JsonConstructor]
+        public FlowElement(ParsedRequest request, ParsedResponse response, Dictionary<string, Export> exports)
         {
+            Request = request;
+            Response = response;
+            Exports = exports;
 
+            GenerateBindings();
         }
+
         public FlowElement(ParsedRequest request, ParsedResponse response)
         {
             Request = request ?? throw new ArgumentNullException(nameof(request));
 
             Response = response ?? throw new ArgumentNullException(nameof(response));
 
-            string requestContentType = Utils.ContentType(request.Headers, request.Body);
+            GenerateBindings();
+        }
 
-            RequestBody = new JsonBinding(request.Body, requestContentType switch
+        private void GenerateBindings()
+        {
+            string requestContentType = Utils.ContentType(Request.Headers, Request.Body);
+            RequestBody = new JsonBinding(Request.Body, requestContentType switch
             {
                 "application/json" => ContentType.JSON,
                 "text/html" => ContentType.XML,
@@ -48,23 +59,24 @@ namespace UserReplay
 
         private JObject GetJsonValue()
         {
-            //Console.WriteLine(JToken.FromObject(Request));
+            Console.WriteLine(JToken.FromObject(Request));
+            Console.WriteLine(JToken.FromObject(Response));
             return new JObject
             {
                 ["Request"] = new JObject
                 {
                     ["Url"] = Request.Url.RemoveQuery().ToString(),
-                    ["Headers"] = JToken.FromObject(Request.Headers) as JObject,
-                    ["QueryParameters"] = JToken.FromObject(Request.QueryParams) as JObject,
-                    ["Cookies"] = JToken.FromObject(Request.Cookies) as JObject,
-                    ["Body"] = RequestBody.Value,
+                    ["Headers"] = JToken.FromObject(Request.Headers ?? []) as JObject,
+                    ["QueryParameters"] = JToken.FromObject(Request.QueryParams ?? []) as JObject,
+                    ["Cookies"] = JToken.FromObject(Request.Cookies ?? []) as JObject,
+                    ["Body"] = RequestBody.Value ?? "",
                 },
                 ["Response"] = new JObject
                 {
                     ["Status"] = Response.Status,
-                    ["Headers"] = JToken.FromObject(Response.Headers) as JObject,
-                    ["Cookies"] = JToken.FromObject(Response.Cookies) as JObject,
-                    ["Body"] = ResponseBody.Value
+                    ["Headers"] = JToken.FromObject(Response.Headers ?? []) as JObject,
+                    ["Cookies"] = JToken.FromObject(Response.Cookies ?? []) as JObject,
+                    ["Body"] = ResponseBody.Value ?? ""
                 }
             };
         }
@@ -81,6 +93,7 @@ namespace UserReplay
         public void UpdateResponse(ParsedResponse response)
         {
             Response = response;
+            GenerateBindings();
         }
 
         public void FillRequestPlaceholders(Dictionary<string, JToken> variables)
@@ -139,9 +152,10 @@ namespace UserReplay
     {
         public string JsonPath { get; private set; }
         public string Regex { get; private set; }
-        public Export(string path, string regex = "")
+        [JsonConstructor]
+        public Export(string jsonpath, string regex = "")
         {
-            JsonPath = path;
+            JsonPath = jsonpath;
             Regex = regex;
         }
         public JToken GetValue(JObject source)
