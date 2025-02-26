@@ -1,0 +1,3722 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "UserReplay OpenAPI Spec",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "api.acresecurity-dev.cloud"
+    },
+    {
+      "url": "sk8erboi.feenicsdev.com"
+    },
+    {
+      "url": "events.acresecurity-dev.cloud"
+    },
+    {
+      "url": "tile.openstreetmap.org"
+    }
+  ],
+  "paths": {
+    "/token": {
+      "post": {
+        "summary": "POST to /token",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "userName": {
+                      "type": "string"
+                    },
+                    "access_token": {
+                      "type": "string"
+                    },
+                    "as:client_id": {
+                      "type": "string"
+                    },
+                    "token_type": {
+                      "type": "string"
+                    },
+                    "refresh_token": {
+                      "type": "string"
+                    },
+                    "expires_in": {
+                      "type": "integer"
+                    },
+                    ".issued": {
+                      "type": "string"
+                    },
+                    ".expires": {
+                      "type": "string"
+                    },
+                    "instance": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "text/plain": {
+              "schema": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/version.json": {
+      "get": {
+        "summary": "GET to /version.json",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "app_name": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "string"
+                    },
+                    "build_number": {
+                      "type": "string"
+                    },
+                    "package_name": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/sysinfo": {
+      "get": {
+        "summary": "GET to /api/sysinfo",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "$type": {
+                      "type": "string"
+                    },
+                    "Version": {
+                      "type": "string"
+                    },
+                    "ServerId": {
+                      "type": "string"
+                    },
+                    "ServerTime": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "EventPublisherUrl": {
+                      "type": "string"
+                    },
+                    "FitScriptEngineUrl": {
+                      "type": "string"
+                    },
+                    "LicenseServerUrl": {
+                      "type": "string"
+                    },
+                    "UapBrokerUrl": {
+                      "type": "string"
+                    },
+                    "ReleaseNotes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "$type": {
+                            "type": "string"
+                          },
+                          "Name": {
+                            "type": "string"
+                          },
+                          "Url": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/currentuser": {
+      "get": {
+        "summary": "GET to /api/currentuser",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "$type": {
+                      "type": "string"
+                    },
+                    "Username": {
+                      "type": "string"
+                    },
+                    "Email": {
+                      "type": "null"
+                    },
+                    "MustChangePassword": {
+                      "type": "boolean"
+                    },
+                    "CannotChangePassword": {
+                      "type": "boolean"
+                    },
+                    "IsLockedOut": {
+                      "type": "boolean"
+                    },
+                    "IsDisabled": {
+                      "type": "boolean"
+                    },
+                    "LastLoginOn": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "LastActivityOn": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "LastPasswordChange": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "TwoFactorEnabled": {
+                      "type": "boolean"
+                    },
+                    "PasswordPolicy": {
+                      "type": "null"
+                    },
+                    "AcceptedEULA": {
+                      "type": "boolean"
+                    },
+                    "Key": {
+                      "type": "string"
+                    },
+                    "CommonName": {
+                      "type": "string"
+                    },
+                    "InFolderHref": {
+                      "type": "string"
+                    },
+                    "InFolderKey": {
+                      "type": "string"
+                    },
+                    "Links": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "$type": {
+                            "type": "string"
+                          },
+                          "Relation": {
+                            "type": "string"
+                          },
+                          "Anchor": {
+                            "type": "object",
+                            "properties": {
+                              "$type": {
+                                "type": "string"
+                              },
+                              "Href": {
+                                "type": "string"
+                              },
+                              "Text": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "ObjectLinks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "$type": {
+                            "type": "string"
+                          },
+                          "Href": {
+                            "type": "null"
+                          },
+                          "LinkedObjectKey": {
+                            "type": "string"
+                          },
+                          "CommonName": {
+                            "type": "string"
+                          },
+                          "Relation": {
+                            "type": "string"
+                          },
+                          "MetaDataBson": {
+                            "type": "object",
+                            "properties": {
+                              "$type": {
+                                "type": "string"
+                              },
+                              "$value": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "Metadata": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "$type": {
+                            "type": "string"
+                          },
+                          "Application": {
+                            "type": "string"
+                          },
+                          "Values": {
+                            "type": "string"
+                          },
+                          "ShouldPublishUpdateEvents": {
+                            "type": "boolean"
+                          },
+                          "Href": {
+                            "type": "null"
+                          }
+                        }
+                      }
+                    },
+                    "Notes": {
+                      "type": "array",
+                      "items": {}
+                    },
+                    "Tags": {
+                      "type": "array",
+                      "items": {}
+                    },
+                    "Monikers": {
+                      "type": "array",
+                      "items": {}
+                    },
+                    "IsGlobal": {
+                      "type": "boolean"
+                    },
+                    "ConcurrencyVersion": {
+                      "type": "integer"
+                    },
+                    "Href": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/assets/assets/aggregation_queries/user_dashboard_count.json": {
+      "get": {
+        "summary": "GET to /assets/assets/aggregation_queries/user_dashboard_count.json",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "$match": {
+                        "type": "object",
+                        "properties": {
+                          "InFolderId": {
+                            "type": "object",
+                            "properties": {
+                              "$oid": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "_t": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id": {
+      "options": {
+        "summary": "OPTIONS to /api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id",
+        "responses": {
+          "204": {
+            "description": "Successful response",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "User-Agent",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/assets/assets/images/acre-logo.png": {
+      "get": {
+        "summary": "GET to /assets/assets/images/acre-logo.png",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "image/png": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/assets/assets/icons/include_child.png": {
+      "get": {
+        "summary": "GET to /assets/assets/icons/include_child.png",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "image/png": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api": {
+      "get": {
+        "summary": "GET to /api",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "$type": {
+                      "type": "string"
+                    },
+                    "FullyQualifiedDomainName": {
+                      "type": "string"
+                    },
+                    "TimeZone": {
+                      "type": "null"
+                    },
+                    "PasswordPolicy": {
+                      "type": "object",
+                      "properties": {
+                        "$type": {
+                          "type": "string"
+                        },
+                        "ForcePasswordChangeSpan": {
+                          "type": "string"
+                        },
+                        "PasswordComplexity": {
+                          "type": "integer"
+                        },
+                        "MinimumPasswordLength": {
+                          "type": "integer"
+                        },
+                        "MaximumFailedAttempts": {
+                          "type": "integer"
+                        },
+                        "LockoutDuration": {
+                          "type": "string"
+                        },
+                        "PasswordHistoryTimeToKeep": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "Holiday2OptIn": {
+                      "type": "boolean"
+                    },
+                    "IsDisabled": {
+                      "type": "boolean"
+                    },
+                    "Key": {
+                      "type": "string"
+                    },
+                    "CommonName": {
+                      "type": "string"
+                    },
+                    "InFolderHref": {
+                      "type": "string"
+                    },
+                    "InFolderKey": {
+                      "type": "string"
+                    },
+                    "Links": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "$type": {
+                            "type": "string"
+                          },
+                          "Relation": {
+                            "type": "string"
+                          },
+                          "Anchor": {
+                            "type": "object",
+                            "properties": {
+                              "$type": {
+                                "type": "string"
+                              },
+                              "Href": {
+                                "type": "string"
+                              },
+                              "Text": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "ObjectLinks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "$type": {
+                            "type": "string"
+                          },
+                          "Href": {
+                            "type": "null"
+                          },
+                          "LinkedObjectKey": {
+                            "type": "string"
+                          },
+                          "CommonName": {
+                            "type": "string"
+                          },
+                          "Relation": {
+                            "type": "string"
+                          },
+                          "MetaDataBson": {
+                            "type": "object",
+                            "properties": {
+                              "$type": {
+                                "type": "string"
+                              },
+                              "$value": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "Metadata": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "$type": {
+                            "type": "string"
+                          },
+                          "Application": {
+                            "type": "string"
+                          },
+                          "Values": {
+                            "type": "string"
+                          },
+                          "ShouldPublishUpdateEvents": {
+                            "type": "boolean"
+                          },
+                          "Href": {
+                            "type": "null"
+                          }
+                        }
+                      }
+                    },
+                    "Notes": {
+                      "type": "array",
+                      "items": {}
+                    },
+                    "Tags": {
+                      "type": "array",
+                      "items": {}
+                    },
+                    "Monikers": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "$type": {
+                            "type": "string"
+                          },
+                          "Namespace": {
+                            "type": "string"
+                          },
+                          "Nickname": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "IsGlobal": {
+                      "type": "boolean"
+                    },
+                    "ConcurrencyVersion": {
+                      "type": "integer"
+                    },
+                    "Href": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/apps": {
+      "get": {
+        "summary": "GET to /api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/apps",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "$type": {
+                      "type": "string"
+                    },
+                    "ApiKey": {
+                      "type": "string"
+                    },
+                    "Actions": {
+                      "type": "array",
+                      "items": {}
+                    },
+                    "Systems": {
+                      "type": "array",
+                      "items": {}
+                    },
+                    "IsServiceApp": {
+                      "type": "boolean"
+                    },
+                    "Key": {
+                      "type": "string"
+                    },
+                    "CommonName": {
+                      "type": "string"
+                    },
+                    "InFolderHref": {
+                      "type": "string"
+                    },
+                    "InFolderKey": {
+                      "type": "string"
+                    },
+                    "Links": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "$type": {
+                            "type": "string"
+                          },
+                          "Relation": {
+                            "type": "string"
+                          },
+                          "Anchor": {
+                            "type": "object",
+                            "properties": {
+                              "$type": {
+                                "type": "string"
+                              },
+                              "Href": {
+                                "type": "string"
+                              },
+                              "Text": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "ObjectLinks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "$type": {
+                            "type": "string"
+                          },
+                          "Href": {
+                            "type": "null"
+                          },
+                          "LinkedObjectKey": {
+                            "type": "string"
+                          },
+                          "CommonName": {
+                            "type": "string"
+                          },
+                          "Relation": {
+                            "type": "string"
+                          },
+                          "MetaDataBson": {
+                            "type": "object",
+                            "properties": {
+                              "$type": {
+                                "type": "string"
+                              },
+                              "$value": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "Metadata": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "$type": {
+                            "type": "string"
+                          },
+                          "Application": {
+                            "type": "string"
+                          },
+                          "Values": {
+                            "type": "string"
+                          },
+                          "ShouldPublishUpdateEvents": {
+                            "type": "boolean"
+                          },
+                          "Href": {
+                            "type": "null"
+                          }
+                        }
+                      }
+                    },
+                    "Notes": {
+                      "type": "array",
+                      "items": {}
+                    },
+                    "Tags": {
+                      "type": "array",
+                      "items": {}
+                    },
+                    "Monikers": {
+                      "type": "array",
+                      "items": {}
+                    },
+                    "IsGlobal": {
+                      "type": "boolean"
+                    },
+                    "ConcurrencyVersion": {
+                      "type": "integer"
+                    },
+                    "Href": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/aggregatestream/KeepObjects": {
+      "post": {
+        "summary": "POST to /api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/aggregatestream/KeepObjects",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "dashboards": {
+                      "type": "object",
+                      "properties": {
+                        "$numberInt": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/people/people_idapeople_idcpeople_idfpeople_idapeople_idbpeople_idedfpeople_idbpeople_id/images": {
+      "get": {
+        "summary": "GET to /api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/people/people_idapeople_idcpeople_idfpeople_idapeople_idbpeople_idedfpeople_idbpeople_id/images",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "$type": {
+                      "type": "string"
+                    },
+                    "Category": {
+                      "type": "string"
+                    },
+                    "Image": {
+                      "type": "object",
+                      "properties": {
+                        "$type": {
+                          "type": "string"
+                        },
+                        "$value": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "Key": {
+                      "type": "string"
+                    },
+                    "CommonName": {
+                      "type": "null"
+                    },
+                    "InFolderHref": {
+                      "type": "string"
+                    },
+                    "InFolderKey": {
+                      "type": "string"
+                    },
+                    "Links": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "$type": {
+                            "type": "string"
+                          },
+                          "Relation": {
+                            "type": "string"
+                          },
+                          "Anchor": {
+                            "type": "object",
+                            "properties": {
+                              "$type": {
+                                "type": "string"
+                              },
+                              "Href": {
+                                "type": "string"
+                              },
+                              "Text": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "ObjectLinks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "$type": {
+                            "type": "string"
+                          },
+                          "Href": {
+                            "type": "null"
+                          },
+                          "LinkedObjectKey": {
+                            "type": "string"
+                          },
+                          "CommonName": {
+                            "type": "string"
+                          },
+                          "Relation": {
+                            "type": "string"
+                          },
+                          "MetaDataBson": {
+                            "type": "object",
+                            "properties": {
+                              "$type": {
+                                "type": "string"
+                              },
+                              "$value": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "Metadata": {
+                      "type": "array",
+                      "items": {}
+                    },
+                    "Notes": {
+                      "type": "array",
+                      "items": {}
+                    },
+                    "Tags": {
+                      "type": "array",
+                      "items": {}
+                    },
+                    "Monikers": {
+                      "type": "array",
+                      "items": {}
+                    },
+                    "IsGlobal": {
+                      "type": "boolean"
+                    },
+                    "ConcurrencyVersion": {
+                      "type": "integer"
+                    },
+                    "Href": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/baseinfo": {
+      "post": {
+        "summary": "POST to /api/baseinfo",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "$type": {
+                        "type": "string"
+                      },
+                      "FullyQualifiedDomainName": {
+                        "type": "string"
+                      },
+                      "TimeZone": {
+                        "type": "null"
+                      },
+                      "PasswordPolicy": {
+                        "type": "object",
+                        "properties": {
+                          "$type": {
+                            "type": "string"
+                          },
+                          "ForcePasswordChangeSpan": {
+                            "type": "string"
+                          },
+                          "PasswordComplexity": {
+                            "type": "integer"
+                          },
+                          "MinimumPasswordLength": {
+                            "type": "integer"
+                          },
+                          "MaximumFailedAttempts": {
+                            "type": "integer"
+                          },
+                          "LockoutDuration": {
+                            "type": "string"
+                          },
+                          "PasswordHistoryTimeToKeep": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "Holiday2OptIn": {
+                        "type": "boolean"
+                      },
+                      "IsDisabled": {
+                        "type": "boolean"
+                      },
+                      "Key": {
+                        "type": "string"
+                      },
+                      "CommonName": {
+                        "type": "string"
+                      },
+                      "InFolderHref": {
+                        "type": "string"
+                      },
+                      "InFolderKey": {
+                        "type": "string"
+                      },
+                      "Links": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Relation": {
+                              "type": "string"
+                            },
+                            "Anchor": {
+                              "type": "object",
+                              "properties": {
+                                "$type": {
+                                  "type": "string"
+                                },
+                                "Href": {
+                                  "type": "string"
+                                },
+                                "Text": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "ObjectLinks": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Href": {
+                              "type": "null"
+                            },
+                            "LinkedObjectKey": {
+                              "type": "string"
+                            },
+                            "CommonName": {
+                              "type": "string"
+                            },
+                            "Relation": {
+                              "type": "string"
+                            },
+                            "MetaDataBson": {
+                              "type": "object",
+                              "properties": {
+                                "$type": {
+                                  "type": "string"
+                                },
+                                "$value": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "Metadata": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Application": {
+                              "type": "string"
+                            },
+                            "Values": {
+                              "type": "string"
+                            },
+                            "ShouldPublishUpdateEvents": {
+                              "type": "boolean"
+                            },
+                            "Href": {
+                              "type": "null"
+                            }
+                          }
+                        }
+                      },
+                      "Notes": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "Tags": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "Monikers": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Namespace": {
+                              "type": "string"
+                            },
+                            "Nickname": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "IsGlobal": {
+                        "type": "boolean"
+                      },
+                      "ConcurrencyVersion": {
+                        "type": "integer"
+                      },
+                      "Href": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/apps/apps_ideapps_idfaapps_idacapps_idbapps_idfcapps_id/eventtypes": {
+      "get": {
+        "summary": "GET to /api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/apps/apps_ideapps_idfaapps_idacapps_idbapps_idfcapps_id/eventtypes",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "$type": {
+                        "type": "string"
+                      },
+                      "MessageTemplateLong": {
+                        "type": "string"
+                      },
+                      "MessageTemplateShort": {
+                        "type": "string"
+                      },
+                      "Priority": {
+                        "type": "integer"
+                      },
+                      "RequiresAcknowledgement": {
+                        "type": "boolean"
+                      },
+                      "NonLogging": {
+                        "type": "boolean"
+                      },
+                      "Key": {
+                        "type": "string"
+                      },
+                      "CommonName": {
+                        "type": "string"
+                      },
+                      "InFolderHref": {
+                        "type": "string"
+                      },
+                      "InFolderKey": {
+                        "type": "string"
+                      },
+                      "Links": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Relation": {
+                              "type": "string"
+                            },
+                            "Anchor": {
+                              "type": "object",
+                              "properties": {
+                                "$type": {
+                                  "type": "string"
+                                },
+                                "Href": {
+                                  "type": "string"
+                                },
+                                "Text": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "ObjectLinks": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Href": {
+                              "type": "null"
+                            },
+                            "LinkedObjectKey": {
+                              "type": "string"
+                            },
+                            "CommonName": {
+                              "type": "string"
+                            },
+                            "Relation": {
+                              "type": "string"
+                            },
+                            "MetaDataBson": {
+                              "type": "object",
+                              "properties": {
+                                "$type": {
+                                  "type": "string"
+                                },
+                                "$value": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "Metadata": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "Notes": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "Tags": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "Monikers": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Namespace": {
+                              "type": "string"
+                            },
+                            "Nickname": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "IsGlobal": {
+                        "type": "boolean"
+                      },
+                      "ConcurrencyVersion": {
+                        "type": "integer"
+                      },
+                      "Href": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/assets/assets/aggregation_queries/instance_explorer.json": {
+      "get": {
+        "summary": "GET to /assets/assets/aggregation_queries/instance_explorer.json",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "$match": {
+                        "type": "object",
+                        "properties": {
+                          "_t": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/apps/apps_idbapps_idddapps_ideapps_idaapps_idc/eventtypes": {
+      "get": {
+        "summary": "GET to /api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/apps/apps_idbapps_idddapps_ideapps_idaapps_idc/eventtypes",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "$type": {
+                        "type": "string"
+                      },
+                      "MessageTemplateLong": {
+                        "type": "string"
+                      },
+                      "MessageTemplateShort": {
+                        "type": "string"
+                      },
+                      "Priority": {
+                        "type": "integer"
+                      },
+                      "RequiresAcknowledgement": {
+                        "type": "boolean"
+                      },
+                      "NonLogging": {
+                        "type": "boolean"
+                      },
+                      "Key": {
+                        "type": "string"
+                      },
+                      "CommonName": {
+                        "type": "string"
+                      },
+                      "InFolderHref": {
+                        "type": "string"
+                      },
+                      "InFolderKey": {
+                        "type": "string"
+                      },
+                      "Links": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Relation": {
+                              "type": "string"
+                            },
+                            "Anchor": {
+                              "type": "object",
+                              "properties": {
+                                "$type": {
+                                  "type": "string"
+                                },
+                                "Href": {
+                                  "type": "string"
+                                },
+                                "Text": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "ObjectLinks": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Href": {
+                              "type": "null"
+                            },
+                            "LinkedObjectKey": {
+                              "type": "string"
+                            },
+                            "CommonName": {
+                              "type": "string"
+                            },
+                            "Relation": {
+                              "type": "string"
+                            },
+                            "MetaDataBson": {
+                              "type": "object",
+                              "properties": {
+                                "$type": {
+                                  "type": "string"
+                                },
+                                "$value": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "Metadata": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "Notes": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "Tags": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "Monikers": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Namespace": {
+                              "type": "string"
+                            },
+                            "Nickname": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "IsGlobal": {
+                        "type": "boolean"
+                      },
+                      "ConcurrencyVersion": {
+                        "type": "integer"
+                      },
+                      "Href": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/dashboards": {
+      "get": {
+        "summary": "GET to /api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/dashboards",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "$type": {
+                        "type": "string"
+                      },
+                      "IsShared": {
+                        "type": "boolean"
+                      },
+                      "Key": {
+                        "type": "string"
+                      },
+                      "CommonName": {
+                        "type": "string"
+                      },
+                      "InFolderHref": {
+                        "type": "string"
+                      },
+                      "InFolderKey": {
+                        "type": "string"
+                      },
+                      "Links": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Relation": {
+                              "type": "string"
+                            },
+                            "Anchor": {
+                              "type": "object",
+                              "properties": {
+                                "$type": {
+                                  "type": "string"
+                                },
+                                "Href": {
+                                  "type": "string"
+                                },
+                                "Text": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "ObjectLinks": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Href": {
+                              "type": "null"
+                            },
+                            "LinkedObjectKey": {
+                              "type": "string"
+                            },
+                            "CommonName": {
+                              "type": "string"
+                            },
+                            "Relation": {
+                              "type": "string"
+                            },
+                            "MetaDataBson": {
+                              "type": "object",
+                              "properties": {
+                                "$type": {
+                                  "type": "string"
+                                },
+                                "$value": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "Metadata": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "Notes": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "Tags": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "Monikers": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Namespace": {
+                              "type": "string"
+                            },
+                            "Nickname": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "IsGlobal": {
+                        "type": "boolean"
+                      },
+                      "ConcurrencyVersion": {
+                        "type": "integer"
+                      },
+                      "Href": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/dashboards/dashboards_idcdashboards_idedashboards_idbdbdashboards_idfdashboards_idb/items": {
+      "get": {
+        "summary": "GET to /api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/dashboards/dashboards_idcdashboards_idedashboards_idbdbdashboards_idfdashboards_idb/items",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "$type": {
+                        "type": "string"
+                      },
+                      "WidgetName": {
+                        "type": "string"
+                      },
+                      "StartingX": {
+                        "type": "integer"
+                      },
+                      "StartingY": {
+                        "type": "integer"
+                      },
+                      "Height": {
+                        "type": "integer"
+                      },
+                      "Width": {
+                        "type": "integer"
+                      },
+                      "ParametersJson": {
+                        "type": "string"
+                      },
+                      "MinHeight": {
+                        "type": "integer"
+                      },
+                      "MinWidth": {
+                        "type": "integer"
+                      },
+                      "Slots": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "SlotSize": {
+                              "type": "integer"
+                            },
+                            "X": {
+                              "type": "integer"
+                            },
+                            "Y": {
+                              "type": "integer"
+                            }
+                          }
+                        }
+                      },
+                      "Key": {
+                        "type": "string"
+                      },
+                      "CommonName": {
+                        "type": "string"
+                      },
+                      "InFolderHref": {
+                        "type": "string"
+                      },
+                      "InFolderKey": {
+                        "type": "string"
+                      },
+                      "Links": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Relation": {
+                              "type": "string"
+                            },
+                            "Anchor": {
+                              "type": "object",
+                              "properties": {
+                                "$type": {
+                                  "type": "string"
+                                },
+                                "Href": {
+                                  "type": "string"
+                                },
+                                "Text": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "ObjectLinks": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Href": {
+                              "type": "null"
+                            },
+                            "LinkedObjectKey": {
+                              "type": "string"
+                            },
+                            "CommonName": {
+                              "type": "string"
+                            },
+                            "Relation": {
+                              "type": "string"
+                            },
+                            "MetaDataBson": {
+                              "type": "object",
+                              "properties": {
+                                "$type": {
+                                  "type": "string"
+                                },
+                                "$value": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "Metadata": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "Notes": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "Tags": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "Monikers": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Namespace": {
+                              "type": "string"
+                            },
+                            "Nickname": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "IsGlobal": {
+                        "type": "boolean"
+                      },
+                      "ConcurrencyVersion": {
+                        "type": "integer"
+                      },
+                      "Href": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/licenses": {
+      "get": {
+        "summary": "GET to /api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/licenses",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "$type": {
+                        "type": "string"
+                      },
+                      "LicenseIdentifier": {
+                        "type": "string"
+                      },
+                      "Certificate": {
+                        "type": "string"
+                      },
+                      "Key": {
+                        "type": "string"
+                      },
+                      "CommonName": {
+                        "type": "string"
+                      },
+                      "InFolderHref": {
+                        "type": "string"
+                      },
+                      "InFolderKey": {
+                        "type": "string"
+                      },
+                      "Links": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Relation": {
+                              "type": "string"
+                            },
+                            "Anchor": {
+                              "type": "object",
+                              "properties": {
+                                "$type": {
+                                  "type": "string"
+                                },
+                                "Href": {
+                                  "type": "string"
+                                },
+                                "Text": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "ObjectLinks": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Href": {
+                              "type": "null"
+                            },
+                            "LinkedObjectKey": {
+                              "type": "string"
+                            },
+                            "CommonName": {
+                              "type": "string"
+                            },
+                            "Relation": {
+                              "type": "string"
+                            },
+                            "MetaDataBson": {
+                              "type": "object",
+                              "properties": {
+                                "$type": {
+                                  "type": "string"
+                                },
+                                "$value": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "Metadata": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "Notes": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "Tags": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "Monikers": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Namespace": {
+                              "type": "string"
+                            },
+                            "Nickname": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "IsGlobal": {
+                        "type": "boolean"
+                      },
+                      "ConcurrencyVersion": {
+                        "type": "integer"
+                      },
+                      "Href": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/userreadnotifications/count": {
+      "get": {
+        "summary": "GET to /api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/userreadnotifications/count",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/userreadnotifications/getunread": {
+      "get": {
+        "summary": "GET to /api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/userreadnotifications/getunread",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "$type": {
+                        "type": "string"
+                      },
+                      "Description": {
+                        "type": "string"
+                      },
+                      "Priority": {
+                        "type": "integer"
+                      },
+                      "IncludeChildInstances": {
+                        "type": "boolean"
+                      },
+                      "IsMarkdown": {
+                        "type": "boolean"
+                      },
+                      "StartDate": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "EndDate": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "Key": {
+                        "type": "string"
+                      },
+                      "CommonName": {
+                        "type": "string"
+                      },
+                      "InFolderHref": {
+                        "type": "string"
+                      },
+                      "InFolderKey": {
+                        "type": "string"
+                      },
+                      "Links": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Relation": {
+                              "type": "string"
+                            },
+                            "Anchor": {
+                              "type": "object",
+                              "properties": {
+                                "$type": {
+                                  "type": "string"
+                                },
+                                "Href": {
+                                  "type": "string"
+                                },
+                                "Text": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "ObjectLinks": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Href": {
+                              "type": "null"
+                            },
+                            "LinkedObjectKey": {
+                              "type": "string"
+                            },
+                            "CommonName": {
+                              "type": "string"
+                            },
+                            "Relation": {
+                              "type": "string"
+                            },
+                            "MetaDataBson": {
+                              "type": "object",
+                              "properties": {
+                                "$type": {
+                                  "type": "string"
+                                },
+                                "$value": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "Metadata": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "Notes": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "Tags": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "Monikers": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Namespace": {
+                              "type": "string"
+                            },
+                            "Nickname": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "IsGlobal": {
+                        "type": "boolean"
+                      },
+                      "ConcurrencyVersion": {
+                        "type": "integer"
+                      },
+                      "Href": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/userreadnotifications/getread": {
+      "get": {
+        "summary": "GET to /api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/userreadnotifications/getread",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {}
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/assets/assets/aggregation_queries/all_alarm_priority_categories.json": {
+      "get": {
+        "summary": "GET to /assets/assets/aggregation_queries/all_alarm_priority_categories.json",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "$match": {
+                        "type": "object",
+                        "properties": {
+                          "InFolderId": {
+                            "type": "object",
+                            "properties": {
+                              "$oid": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "_t": {
+                            "type": "string"
+                          },
+                          "TypeName": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/assets/assets/aggregation_queries/event_history_query.json": {
+      "get": {
+        "summary": "GET to /assets/assets/aggregation_queries/event_history_query.json",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "$match": {
+                        "type": "object",
+                        "properties": {
+                          "$and": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "OccurredOn.Date": {
+                                  "type": "object",
+                                  "properties": {
+                                    "$lt": {
+                                      "type": "object",
+                                      "properties": {
+                                        "$date": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/accesslevels": {
+      "get": {
+        "summary": "GET to /api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/accesslevels",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {}
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/schedules": {
+      "get": {
+        "summary": "GET to /api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/schedules",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "$type": {
+                        "type": "string"
+                      },
+                      "Index": {
+                        "type": "integer"
+                      },
+                      "IsReadOnly": {
+                        "type": "boolean"
+                      },
+                      "IsAlways": {
+                        "type": "boolean"
+                      },
+                      "ScheduleDurations": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "OneOffDate": {
+                        "type": "null"
+                      },
+                      "Key": {
+                        "type": "string"
+                      },
+                      "CommonName": {
+                        "type": "string"
+                      },
+                      "InFolderHref": {
+                        "type": "string"
+                      },
+                      "InFolderKey": {
+                        "type": "string"
+                      },
+                      "Links": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Relation": {
+                              "type": "string"
+                            },
+                            "Anchor": {
+                              "type": "object",
+                              "properties": {
+                                "$type": {
+                                  "type": "string"
+                                },
+                                "Href": {
+                                  "type": "string"
+                                },
+                                "Text": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "ObjectLinks": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Href": {
+                              "type": "null"
+                            },
+                            "LinkedObjectKey": {
+                              "type": "string"
+                            },
+                            "CommonName": {
+                              "type": "string"
+                            },
+                            "Relation": {
+                              "type": "string"
+                            },
+                            "MetaDataBson": {
+                              "type": "object",
+                              "properties": {
+                                "$type": {
+                                  "type": "string"
+                                },
+                                "$value": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "Metadata": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "Notes": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "Tags": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "Monikers": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Namespace": {
+                              "type": "string"
+                            },
+                            "Nickname": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "IsGlobal": {
+                        "type": "boolean"
+                      },
+                      "ConcurrencyVersion": {
+                        "type": "integer"
+                      },
+                      "Href": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/cardformats": {
+      "get": {
+        "summary": "GET to /api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/cardformats",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "$type": {
+                        "type": "string"
+                      },
+                      "NumberOfBits": {
+                        "type": "integer"
+                      },
+                      "FacilityCodeStartingAt": {
+                        "type": "integer"
+                      },
+                      "FacilityCodeLength": {
+                        "type": "integer"
+                      },
+                      "CardNumberStartingAt": {
+                        "type": "integer"
+                      },
+                      "CardNumberLength": {
+                        "type": "integer"
+                      },
+                      "IssueCodeStartingAt": {
+                        "type": "integer"
+                      },
+                      "IssueCodeLength": {
+                        "type": "integer"
+                      },
+                      "EvenParityBitsStartingAt": {
+                        "type": "integer"
+                      },
+                      "EvenParityBitsLength": {
+                        "type": "integer"
+                      },
+                      "OddParityBitsStartingAt": {
+                        "type": "integer"
+                      },
+                      "OddParityBitsLength": {
+                        "type": "integer"
+                      },
+                      "Offset": {
+                        "type": "integer"
+                      },
+                      "MagneticFormat": {
+                        "type": "boolean"
+                      },
+                      "FacilityCode": {
+                        "type": "integer"
+                      },
+                      "MinCardNumberDigits": {
+                        "type": "integer"
+                      },
+                      "ReverseBitStream": {
+                        "type": "boolean"
+                      },
+                      "CardFieldAsLargeEncodedNumber": {
+                        "type": "boolean"
+                      },
+                      "ReverseBytes": {
+                        "type": "boolean"
+                      },
+                      "EnableSpecial37BitParityCheck": {
+                        "type": "boolean"
+                      },
+                      "ShouldConvert200BitTo128": {
+                        "type": "boolean"
+                      },
+                      "Key": {
+                        "type": "string"
+                      },
+                      "CommonName": {
+                        "type": "string"
+                      },
+                      "InFolderHref": {
+                        "type": "string"
+                      },
+                      "InFolderKey": {
+                        "type": "string"
+                      },
+                      "Links": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Relation": {
+                              "type": "string"
+                            },
+                            "Anchor": {
+                              "type": "object",
+                              "properties": {
+                                "$type": {
+                                  "type": "string"
+                                },
+                                "Href": {
+                                  "type": "string"
+                                },
+                                "Text": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "ObjectLinks": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Href": {
+                              "type": "null"
+                            },
+                            "LinkedObjectKey": {
+                              "type": "string"
+                            },
+                            "CommonName": {
+                              "type": "string"
+                            },
+                            "Relation": {
+                              "type": "string"
+                            },
+                            "MetaDataBson": {
+                              "type": "object",
+                              "properties": {
+                                "$type": {
+                                  "type": "string"
+                                },
+                                "$value": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "Metadata": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "Notes": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "Tags": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "Monikers": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Namespace": {
+                              "type": "string"
+                            },
+                            "Nickname": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "IsGlobal": {
+                        "type": "boolean"
+                      },
+                      "ConcurrencyVersion": {
+                        "type": "integer"
+                      },
+                      "Href": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/aggregatestream/Events": {
+      "post": {
+        "summary": "POST to /api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/aggregatestream/Events",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/assets/assets/aggregation_queries/person_search.json": {
+      "get": {
+        "summary": "GET to /assets/assets/aggregation_queries/person_search.json",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "$match": {
+                        "type": "object",
+                        "properties": {
+                          "_t": {
+                            "type": "string"
+                          },
+                          "InFolderId": {
+                            "type": "object",
+                            "properties": {
+                              "$oid": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/assets/assets/aggregation_queries/hardware_list_with_status.json": {
+      "get": {
+        "summary": "GET to /assets/assets/aggregation_queries/hardware_list_with_status.json",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "$match": {
+                        "type": "object",
+                        "properties": {
+                          "_t": {
+                            "type": "object",
+                            "properties": {
+                              "$in": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/events": {
+      "get": {
+        "summary": "GET to /api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/events",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "$type": {
+                        "type": "string"
+                      },
+                      "InFolderKey": {
+                        "type": "string"
+                      },
+                      "Href": {
+                        "type": "string"
+                      },
+                      "Links": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Relation": {
+                              "type": "string"
+                            },
+                            "Anchor": {
+                              "type": "object",
+                              "properties": {
+                                "$type": {
+                                  "type": "string"
+                                },
+                                "Href": {
+                                  "type": "string"
+                                },
+                                "Text": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "ClientDeviceId": {
+                        "type": "null"
+                      },
+                      "AlarmAcknowledgements": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "RequiresAcknowledgement": {
+                        "type": "boolean"
+                      },
+                      "Key": {
+                        "type": "string"
+                      },
+                      "AppKey": {
+                        "type": "string"
+                      },
+                      "EventTypeKey": {
+                        "type": "string"
+                      },
+                      "Priority": {
+                        "type": "integer"
+                      },
+                      "OccurredOn": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "PublishedOn": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "MessageShort": {
+                        "type": "string"
+                      },
+                      "MessageLong": {
+                        "type": "string"
+                      },
+                      "EventDataBsonBase64": {
+                        "type": "string"
+                      },
+                      "Tags": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "Monikers": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Namespace": {
+                              "type": "string"
+                            },
+                            "Nickname": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "ObjectLinks": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Href": {
+                              "type": "null"
+                            },
+                            "LinkedObjectKey": {
+                              "type": "string"
+                            },
+                            "CommonName": {
+                              "type": "string"
+                            },
+                            "Relation": {
+                              "type": "string"
+                            },
+                            "MetaDataBson": {
+                              "type": "object",
+                              "properties": {
+                                "$type": {
+                                  "type": "string"
+                                },
+                                "$value": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/assets/assets/aggregation_queries/feenics_location.json": {
+      "get": {
+        "summary": "GET to /assets/assets/aggregation_queries/feenics_location.json",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "$match": {
+                        "type": "object",
+                        "properties": {
+                          "Metadata.Application": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/generics": {
+      "get": {
+        "summary": "GET to /api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/generics",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "$type": {
+                        "type": "string"
+                      },
+                      "TypeName": {
+                        "type": "string"
+                      },
+                      "Values": {
+                        "type": "string"
+                      },
+                      "ShouldPublishUpdateEvents": {
+                        "type": "boolean"
+                      },
+                      "Key": {
+                        "type": "string"
+                      },
+                      "CommonName": {
+                        "type": "string"
+                      },
+                      "InFolderHref": {
+                        "type": "string"
+                      },
+                      "InFolderKey": {
+                        "type": "string"
+                      },
+                      "Links": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Relation": {
+                              "type": "string"
+                            },
+                            "Anchor": {
+                              "type": "object",
+                              "properties": {
+                                "$type": {
+                                  "type": "string"
+                                },
+                                "Href": {
+                                  "type": "string"
+                                },
+                                "Text": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "ObjectLinks": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Href": {
+                              "type": "null"
+                            },
+                            "LinkedObjectKey": {
+                              "type": "string"
+                            },
+                            "CommonName": {
+                              "type": "string"
+                            },
+                            "Relation": {
+                              "type": "string"
+                            },
+                            "MetaDataBson": {
+                              "type": "object",
+                              "properties": {
+                                "$type": {
+                                  "type": "string"
+                                },
+                                "$value": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "Metadata": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Application": {
+                              "type": "string"
+                            },
+                            "Values": {
+                              "type": "string"
+                            },
+                            "ShouldPublishUpdateEvents": {
+                              "type": "boolean"
+                            },
+                            "Href": {
+                              "type": "null"
+                            }
+                          }
+                        }
+                      },
+                      "Notes": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "Tags": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "Monikers": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Namespace": {
+                              "type": "string"
+                            },
+                            "Nickname": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "IsGlobal": {
+                        "type": "boolean"
+                      },
+                      "ConcurrencyVersion": {
+                        "type": "integer"
+                      },
+                      "Href": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/apps/apps_idfapps_iddaapps_idcedapps_idcapps_idbapps_ide/eventtypes": {
+      "get": {
+        "summary": "GET to /api/f/f_idcf_idef_idcf_idadf_iddcf_idfacf_id/apps/apps_idfapps_iddaapps_idcedapps_idcapps_idbapps_ide/eventtypes",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "$type": {
+                        "type": "string"
+                      },
+                      "MessageTemplateLong": {
+                        "type": "string"
+                      },
+                      "MessageTemplateShort": {
+                        "type": "string"
+                      },
+                      "Priority": {
+                        "type": "integer"
+                      },
+                      "RequiresAcknowledgement": {
+                        "type": "boolean"
+                      },
+                      "NonLogging": {
+                        "type": "boolean"
+                      },
+                      "Key": {
+                        "type": "string"
+                      },
+                      "CommonName": {
+                        "type": "string"
+                      },
+                      "InFolderHref": {
+                        "type": "string"
+                      },
+                      "InFolderKey": {
+                        "type": "string"
+                      },
+                      "Links": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Relation": {
+                              "type": "string"
+                            },
+                            "Anchor": {
+                              "type": "object",
+                              "properties": {
+                                "$type": {
+                                  "type": "string"
+                                },
+                                "Href": {
+                                  "type": "string"
+                                },
+                                "Text": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "ObjectLinks": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Href": {
+                              "type": "null"
+                            },
+                            "LinkedObjectKey": {
+                              "type": "string"
+                            },
+                            "CommonName": {
+                              "type": "string"
+                            },
+                            "Relation": {
+                              "type": "string"
+                            },
+                            "MetaDataBson": {
+                              "type": "object",
+                              "properties": {
+                                "$type": {
+                                  "type": "string"
+                                },
+                                "$value": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "Metadata": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "Notes": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "Tags": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "Monikers": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "$type": {
+                              "type": "string"
+                            },
+                            "Namespace": {
+                              "type": "string"
+                            },
+                            "Nickname": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "IsGlobal": {
+                        "type": "boolean"
+                      },
+                      "ConcurrencyVersion": {
+                        "type": "integer"
+                      },
+                      "Href": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/_id/11_id/593_id.png": {
+      "get": {
+        "summary": "GET to /_id/11_id/593_id.png",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "image/png": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/_id/11_id/594_id.png": {
+      "get": {
+        "summary": "GET to /_id/11_id/594_id.png",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "image/png": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/_id/11_id/592_id.png": {
+      "get": {
+        "summary": "GET to /_id/11_id/592_id.png",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "image/png": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/_id/11_id/595_id.png": {
+      "get": {
+        "summary": "GET to /_id/11_id/595_id.png",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "image/png": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/assets/assets/aggregation_queries/event_type_count_live_chart.json": {
+      "get": {
+        "summary": "GET to /assets/assets/aggregation_queries/event_type_count_live_chart.json",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "$match": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "object",
+                            "properties": {
+                              "$gte": {
+                                "type": "object",
+                                "properties": {
+                                  "$oid": {
+                                    "type": "string"
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "EventTypeId": {
+                            "type": "object",
+                            "properties": {
+                              "$in": {
+                                "type": "array",
+                                "items": {}
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sec-ch-ua-platform",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,138 @@
+﻿<Page x:Class="EndpointExplorer.MainPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:local="using:EndpointExplorer"
+      xmlns:winui="using:Microsoft.UI.Xaml.Controls"
+      xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+      Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Page.Resources>
+        <local:BoolToGridLengthConverter x:Key="BoolToGridLengthConverter" />
+    </Page.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <!-- ^ Menu Bar -->
+            <RowDefinition Height="*" />
+            <!-- ^ Main Content -->
+            <RowDefinition Height="Auto" />
+            <!-- ^ Bottom Section (don't touch above) -->
+        </Grid.RowDefinitions>
+        <!-- Menu Bar -->
+        <MenuBar Grid.Row="0">
+            <MenuBarItem Title="File">
+                <MenuFlyoutItem Text="Import From HAR"
+                                Click="OnImportFromHAR" />
+                <MenuFlyoutItem Text="Load Flow"
+                                Click="OnLoadFlow" />
+                <MenuFlyoutItem Text="Save Flow"
+                                Click="OnSaveFlow" />
+                <MenuFlyoutItem Text="Save Flow As"
+                                Click="OnSaveFlowAs" />
+            </MenuBarItem>
+        </MenuBar>
+        <!-- Action Bar -->
+        <StackPanel Grid.Row="0"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top"
+                    Margin="0,30,0,0"
+                    Canvas.ZIndex="1"
+                    Orientation="Horizontal"
+                    Padding="8"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    CornerRadius="4">
+            <Button Click="OnPlay"
+                    Margin="5,0">
+                <SymbolIcon Symbol="Play"
+                            ToolTipService.ToolTip="Start Flow Playback" />
+            </Button>
+            <Button Click="OnStepForward"
+                    Margin="5,0">
+                <SymbolIcon Symbol="Forward"
+                            ToolTipService.ToolTip="Execute The Next Flow Element" />
+            </Button>
+            <Button Click="OnRestart"
+                    ToolTipService.ToolTip="Restart">
+                <SymbolIcon Symbol="Refresh" />
+            </Button>
+            <Button Click="OnStop"
+                    Margin="5,0">
+                <SymbolIcon Symbol="Stop"
+                            ToolTipService.ToolTip="Stop playback" />
+            </Button>
+        </StackPanel>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="{Binding IsPaneOpen, ElementName=LeftPanel, Converter={StaticResource BoolToGridLengthConverter}}" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <!-- Left Panel for external parameters (currently placeholder) -->
+            <muxc:SplitView x:Name="LeftPanel"
+                            Grid.Column="0"
+                            DisplayMode="Inline"
+                            OpenPaneLength="250"
+                            CompactPaneLength="0"
+                            IsPaneOpen="True">
+                <muxc:SplitView.Pane>
+                    <ScrollViewer>
+                        <StackPanel>
+                            <muxc:Expander Header="Section 1"
+                                           IsExpanded="True">
+                                <TextBlock Text="Content 1"
+                                           Margin="10" />
+                            </muxc:Expander>
+                            <muxc:Expander Header="Section 2"
+                                           IsExpanded="True">
+                                <TextBlock Text="Content 2"
+                                           Margin="10" />
+                            </muxc:Expander>
+                        </StackPanel>
+                    </ScrollViewer>
+                </muxc:SplitView.Pane>
+            </muxc:SplitView>
+            <!-- Toggle button for left vertical panel -->
+            <Button Grid.Column="1"
+                    Click="TogglePane"
+                    Width="45"
+                    Height="35"
+                    Margin="5,0,0,0"
+                    VerticalAlignment="Top"
+                    HorizontalAlignment="Left"
+                    Background="Transparent">
+                <SymbolIcon x:Name="ToggleButtonIcon"
+                            Symbol="Back"
+                            Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+            </Button>
+            <!-- Horizontal Scroll Panel for flow elements (change to ItemRepeater control to allow large HARs? might need tweaks to InteractiveJsonViewer) -->
+            <ScrollViewer Grid.Column="2"
+                          HorizontalScrollMode="Auto"
+                          HorizontalScrollBarVisibility="Auto"
+                          VerticalAlignment="Stretch">
+                <ItemsControl x:Name="HorizontalItems">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal"
+                                        Spacing="10"
+                                        Padding="10"
+                                        VerticalAlignment="Stretch" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Width="200"
+                                    Height="{Binding RelativeSource={RelativeSource Self}, Path=Parent.Parent.ActualHeight}"
+                                    Background="LightGray"
+                                    CornerRadius="4"
+                                    VerticalAlignment="Stretch" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
+        <!-- Bottom Section (reserved for orchestrator info display) -->
+        <Border Grid.Row="2"
+                Height="100"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                Margin="0,10,0,0" />
+    </Grid>
+</Page>

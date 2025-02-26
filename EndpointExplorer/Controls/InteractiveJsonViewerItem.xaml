@@ -1,0 +1,65 @@
+<UserControl x:Class="EndpointExplorer.Controls.InteractiveJsonViewerItem"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:EndpointExplorer.Controls"
+             xmlns:json="using:Newtonsoft.Json.Linq">
+    <UserControl.Resources>
+        <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+    </UserControl.Resources>
+    <Grid x:Name="RootGrid">
+        <Border BorderBrush="Gray"
+                BorderThickness="1"
+                Padding="4,4,0,4"
+                Margin="2,2,0,2">
+            <Grid>
+                <!-- JProperty -->
+                <StackPanel Visibility="{x:Bind IsJProperty, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{x:Bind PropertyName}"
+                                   FontWeight="Bold" />
+                        <TextBlock Text=": " />
+                        <TextBlock Text="{x:Bind InlineValue}"
+                                   Visibility="{x:Bind HasInlineValue, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
+                    </StackPanel>
+                    <ItemsControl ItemsSource="{x:Bind Children}"
+                                  Visibility="{x:Bind ShowChildren, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="json:JToken">
+                                <local:InteractiveJsonViewerItem Token="{x:Bind}"
+                                                                 FlowElement="{Binding FlowElement, ElementName=RootGrid}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+                <!-- JObject -->
+                <StackPanel Visibility="{x:Bind IsJObject, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <ItemsControl ItemsSource="{x:Bind Children}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="json:JToken">
+                                <local:InteractiveJsonViewerItem Token="{x:Bind}"
+                                                                 FlowElement="{Binding FlowElement, ElementName=RootGrid}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+                <!-- JArray -->
+                <StackPanel Visibility="{x:Bind IsJArray, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <ItemsControl ItemsSource="{x:Bind Children}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="json:JToken">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="- " />
+                                    <local:InteractiveJsonViewerItem Token="{x:Bind}"
+                                                                     FlowElement="{Binding FlowElement, ElementName=RootGrid}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+                <!-- JValue (don't think this is used) -->
+                <TextBlock Text="{x:Bind TokenValue}"
+                           Visibility="{x:Bind IsJValue, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

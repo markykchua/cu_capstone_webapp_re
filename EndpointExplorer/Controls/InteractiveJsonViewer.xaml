@@ -1,0 +1,19 @@
+<UserControl x:Class="EndpointExplorer.Controls.InteractiveJsonViewer"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:json="using:Newtonsoft.Json.Linq"
+             xmlns:local="using:EndpointExplorer.Controls">
+    <!-- probably need binding for color(s) later -->
+    <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                  VerticalScrollBarVisibility="Auto">
+        <ItemsControl x:Name="JsonItemsControl"
+                      ItemsSource="{Binding FlowElement.Value, RelativeSource={RelativeSource Mode=TemplatedParent}}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="json:JToken">
+                    <local:InteractiveJsonViewerItem Token="{x:Bind}"
+                                                     FlowElement="{Binding FlowElement, RelativeSource={RelativeSource Mode=TemplatedParent}}" />
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </ScrollViewer>
+</UserControl>
