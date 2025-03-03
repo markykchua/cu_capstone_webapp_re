@@ -117,15 +117,6 @@
                                         VerticalAlignment="Stretch" />
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Border Width="200"
-                                    Height="{Binding RelativeSource={RelativeSource Self}, Path=Parent.Parent.ActualHeight}"
-                                    Background="LightGray"
-                                    CornerRadius="4"
-                                    VerticalAlignment="Stretch" />
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
                 </ItemsControl>
             </ScrollViewer>
         </Grid>
