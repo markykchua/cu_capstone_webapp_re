@@ -5,6 +5,7 @@
              xmlns:local="using:EndpointExplorer.Controls">
     <!-- probably need binding for color(s) later -->
     <Border Height="{Binding RelativeSource={RelativeSource Self}, Path=Parent.Parent.ActualHeight}"
+            Width="220"
             CornerRadius="2"
             VerticalAlignment="Stretch">
         <ItemsControl x:Name="JsonItemsControl"

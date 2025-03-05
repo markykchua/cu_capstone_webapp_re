@@ -104,7 +104,8 @@
                             Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
             </Button>
             <!-- Horizontal Scroll Panel for flow elements (change to ItemRepeater control to allow large HARs? might need tweaks to InteractiveJsonViewer) -->
-            <ScrollViewer Grid.Column="2"
+            <ScrollViewer x:Name="FlowElementScrollPanel"
+                          Grid.Column="2"
                           HorizontalScrollMode="Auto"
                           HorizontalScrollBarVisibility="Auto"
                           VerticalAlignment="Stretch">

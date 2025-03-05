@@ -59,8 +59,8 @@ public class FlowElement
 
     private JObject GetJsonValue()
     {
-        Console.WriteLine(JToken.FromObject(Request));
-        Console.WriteLine(JToken.FromObject(Response));
+        //Console.WriteLine(JToken.FromObject(Request));
+        //Console.WriteLine(JToken.FromObject(Response));
         return new JObject
         {
             ["Request"] = new JObject

@@ -1,9 +1,35 @@
 using System.Collections.ObjectModel;
+using CommandLine;
 
 namespace EndpointExplorer.Controls;
 // InteractiveJsonViewer.xaml.cs
 public sealed partial class InteractiveJsonViewer : UserControl
 {
+    private bool _isInView;
+    public bool IsInView
+    {
+        get => _isInView;
+        set
+        {
+            if (_isInView != value)
+            {
+                _isInView = value;
+                if (!value)
+                {
+                    if (JsonItemsControl != null)
+                    {
+                        JsonItemsControl.ItemsSource = new ObservableCollection<JToken> { new JValue(string.Empty) };
+                    }
+                }
+                else
+                {
+                    UpdateJsonItems();
+                }
+            }
+
+        }
+    }
+    public FrameworkElement Frame => this;
     public InteractiveJsonViewer()
     {
         this.InitializeComponent();

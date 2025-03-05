@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using EndpointExplorer.Controls;
+using Windows.Foundation;
 using Windows.Storage.Pickers;
 
 namespace EndpointExplorer;
@@ -13,6 +14,20 @@ public sealed partial class MainPage : Page
     {
         this.InitializeComponent();
         HorizontalItems.ItemsSource = FlowElements;
+        FlowElementScrollPanel.ViewChanged += (s, e) =>
+        {
+            var scrollViewer = s as ScrollViewer;
+            var viewportWidth = scrollViewer.ViewportWidth;
+            var horizontalOffset = scrollViewer.HorizontalOffset;
+            var extendedViewportStart = horizontalOffset - (viewportWidth * 0.5);
+            var extendedViewportEnd = horizontalOffset + (viewportWidth * 1.5);
+
+            foreach (var element in FlowElements)
+            {
+                var elementPosition = FlowElements.IndexOf(element) * 230;
+                element.IsInView = elementPosition >= extendedViewportStart && elementPosition <= extendedViewportEnd;
+            }
+        };
     }
     public Thickness PanelMargin { get; private set; }
     public Symbol PanelIcon { get; private set; }
@@ -32,13 +47,8 @@ public sealed partial class MainPage : Page
         CurrentFlowFile = null;
         JObject har = JToken.Parse(fileContents) as JObject;
         Flow = UserFlow.FromHar(har);
-        foreach (var elem in Flow.FlowElements)
-        {
-            if (FlowElements.Count < 10)
-            {
-                FlowElements.Add(new InteractiveJsonViewer() { FlowElement = elem });
-            }
-        }
+
+        LoadFlowElementsIncrementally();
     }
     private async void OnLoadFlow(object sender, RoutedEventArgs e)
     {
@@ -50,13 +60,34 @@ public sealed partial class MainPage : Page
         CurrentFlowFile = file;
         JObject loaded = JToken.Parse(fileContents) as JObject;
         Flow = loaded.ToObject<UserFlow>();
+        LoadFlowElementsIncrementally();
+    }
+
+    private void LoadFlowElementsIncrementally()
+    {
+        if (Flow == null) return;
+
+        // Clear existing elements
+        FlowElements.Clear();
+
+        // Get the dispatcher
+        var dispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
+
         foreach (var elem in Flow.FlowElements)
         {
-            if (FlowElements.Count < 10)
-            {
-                FlowElements.Add(new InteractiveJsonViewer() { FlowElement = elem });
-            }
+            FlowElements.Add(new InteractiveJsonViewer() { });
         }
+
+        dispatcherQueue.TryEnqueue(async () =>
+        {
+            for (int i = 0; i < Flow.FlowElements.Count; i++)
+            {
+                var elem = Flow.FlowElements[i];
+                var viewer = FlowElements[i];
+                viewer.FlowElement = elem;
+                await Task.Delay(500);
+            }
+        });
     }
 
     private async Task<(StorageFile, string)> GetFromFilePicker(string fileExtension)
