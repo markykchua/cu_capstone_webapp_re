@@ -54,6 +54,8 @@ public class UserFlow
             Console.WriteLine($"Inserting {relation.GetType().Name}");
             relation.InsertRelation(this);
         }
+
+        Console.WriteLine($"Found {ExternalVariables.Count} external variables");
     }
 
 }
