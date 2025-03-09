@@ -1,0 +1,92 @@
+<UserControl x:Class="EndpointExplorer.Controls.FlowElementViewer"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:json="using:Newtonsoft.Json.Linq"
+             xmlns:local="using:EndpointExplorer.Controls">
+    <!-- probably need binding for color(s) later -->
+    <Border Height="{Binding RelativeSource={RelativeSource Self}, Path=Parent.Parent.ActualHeight}"
+            CornerRadius="2"
+            VerticalAlignment="Stretch">
+        <StackPanel>
+            <!-- Request Section -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border BorderBrush="LightGray"
+                        BorderThickness="1"
+                        Padding="8"
+                        CornerRadius="4"
+                        Grid.Column="0">
+                    <StackPanel>
+                        <!-- Collapsed Request View -->
+                        <StackPanel Visibility="{x:Bind IsRequestCollapsed, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <TextBlock Text="{x:Bind RequestMethod, Mode=OneWay}"
+                                       FontWeight="SemiBold"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Text="{x:Bind RequestHost, Mode=OneWay}"
+                                       TextWrapping="Wrap"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Text="{x:Bind RequestEndpoint, Mode=OneWay}"
+                                       TextWrapping="Wrap"
+                                       HorizontalAlignment="Center" />
+                        </StackPanel>
+                        <!-- Expanded Request View -->
+                        <StackPanel Visibility="{x:Bind IsRequestExpanded, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <local:InteractiveJsonViewerItem Token="{x:Bind RequestToken, Mode=OneWay}"
+                                                             FlowElement="{x:Bind FlowElement, Mode=OneWay}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                <!-- Expand/Collapse Button -->
+                <Button Grid.Column="1"
+                        Content="{x:Bind RequestToggleIcon, Mode=OneWay}"
+                        Click="ToggleRequestExpand_Click"
+                        VerticalAlignment="Top" />
+            </Grid>
+            <!-- Arrow Between Request and Response -->
+            <Grid Height="32"
+                  Margin="0,4">
+                <Path Data="M 0,0 L 0,16 L -8,16 L 0,32 L 8,16 L 0,16"
+                      Stroke="Gray"
+                      StrokeThickness="2"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center" />
+            </Grid>
+            <!-- Response Section -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border BorderBrush="{x:Bind ResponseStatusColor, Mode=OneWay}"
+                        BorderThickness="2"
+                        Padding="8"
+                        CornerRadius="4"
+                        Grid.Column="0">
+                    <StackPanel>
+                        <!-- Collapsed Response View -->
+                        <StackPanel Visibility="{x:Bind IsResponseCollapsed, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <TextBlock HorizontalAlignment="Center">
+                                <Run Text="{x:Bind ResponseStatus, Mode=OneWay}" />
+                                <Run Text=" " />
+                                <Run Text="{x:Bind ResponseStatusName, Mode=OneWay}" />
+                            </TextBlock>
+                        </StackPanel>
+                        <!-- Expanded Response View -->
+                        <StackPanel Visibility="{x:Bind IsResponseExpanded, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <local:InteractiveJsonViewerItem Token="{x:Bind ResponseToken, Mode=OneWay}"
+                                                             FlowElement="{x:Bind FlowElement, Mode=OneWay}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                <!-- Expand/Collapse Button -->
+                <Button Grid.Column="1"
+                        Content="{x:Bind ResponseToggleIcon, Mode=OneWay}"
+                        Click="ToggleResponseExpand_Click"
+                        VerticalAlignment="Top" />
+            </Grid>
+        </StackPanel>
+    </Border>
+</UserControl>

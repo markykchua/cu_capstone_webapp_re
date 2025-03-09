@@ -7,36 +7,32 @@ namespace EndpointExplorer;
 
 public sealed partial class MainPage : Page
 {
-    public ObservableCollection<InteractiveJsonViewer> FlowElements { get; } = new ObservableCollection<InteractiveJsonViewer>();
+    public ObservableCollection<FlowElementViewer> FlowElements { get; } = new ObservableCollection<FlowElementViewer>();
     private StorageFile CurrentFlowFile = null; // need to display somewhere
+
+    // Pagination properties
+    private int _currentPage = 0;
+    private int _elementsPerPage = 5;
+    private ObservableCollection<FlowElementViewer> _displayedElements = new ObservableCollection<FlowElementViewer>();
 
     public MainPage()
     {
         this.InitializeComponent();
-        HorizontalItems.ItemsSource = FlowElements;
-        FlowElementScrollPanel.ViewChanged += (s, e) =>
-        {
-            var scrollViewer = s as ScrollViewer;
-            var viewportWidth = scrollViewer.ViewportWidth;
-            var horizontalOffset = scrollViewer.HorizontalOffset;
-            var extendedViewportStart = horizontalOffset - (viewportWidth * 0.5);
-            var extendedViewportEnd = horizontalOffset + (viewportWidth * 1.5);
-
-            foreach (var element in FlowElements)
-            {
-                var elementPosition = FlowElements.IndexOf(element) * 230;
-                element.IsInView = elementPosition >= extendedViewportStart && elementPosition <= extendedViewportEnd;
-            }
-        };
+        // Change this line to use the new paged control
+        PagedItems.ItemsSource = _displayedElements;
+        UpdatePaginationUI();
     }
+
     public Thickness PanelMargin { get; private set; }
     public Symbol PanelIcon { get; private set; }
     public UserFlow Flow = null;
+
     private void TogglePane(object sender, RoutedEventArgs e)
     {
         LeftPanel.IsPaneOpen = !LeftPanel.IsPaneOpen;
         ToggleButtonIcon.Symbol = LeftPanel.IsPaneOpen ? Symbol.Back : Symbol.Forward;
     }
+
     private async void OnImportFromHAR(object sender, RoutedEventArgs e)
     {
         (StorageFile _, string fileContents) = await GetFromFilePicker(".har");
@@ -48,8 +44,9 @@ public sealed partial class MainPage : Page
         JObject har = JToken.Parse(fileContents) as JObject;
         Flow = UserFlow.FromHar(har);
 
-        LoadFlowElementsIncrementally();
+        LoadFlowElements();
     }
+
     private async void OnLoadFlow(object sender, RoutedEventArgs e)
     {
         (StorageFile file, string fileContents) = await GetFromFilePicker(".json");
@@ -60,34 +57,28 @@ public sealed partial class MainPage : Page
         CurrentFlowFile = file;
         JObject loaded = JToken.Parse(fileContents) as JObject;
         Flow = loaded.ToObject<UserFlow>();
-        LoadFlowElementsIncrementally();
+        LoadFlowElements();
     }
 
-    private void LoadFlowElementsIncrementally()
+    private void LoadFlowElements()
     {
         if (Flow == null) return;
+        Console.WriteLine($"Elements per page: {_elementsPerPage}");
 
         // Clear existing elements
         FlowElements.Clear();
 
-        // Get the dispatcher
-        var dispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
+        // Reset pagination
+        _currentPage = 0;
 
-        foreach (var elem in Flow.FlowElements)
+        for (int i = 0; i < Flow.FlowElements.Count; i++)
         {
-            FlowElements.Add(new InteractiveJsonViewer() { });
+            var elem = Flow.FlowElements[i];
+            var viewer = new FlowElementViewer();
+            viewer.FlowElement = elem;
+            FlowElements.Add(viewer);
         }
-
-        dispatcherQueue.TryEnqueue(async () =>
-        {
-            for (int i = 0; i < Flow.FlowElements.Count; i++)
-            {
-                var elem = Flow.FlowElements[i];
-                var viewer = FlowElements[i];
-                viewer.FlowElement = elem;
-                await Task.Delay(500);
-            }
-        });
+        UpdateDisplayedElements();
     }
 
     private async Task<(StorageFile, string)> GetFromFilePicker(string fileExtension)
@@ -108,7 +99,6 @@ public sealed partial class MainPage : Page
         return (null, null);
     }
 
-
     private async Task OnSaveFlow(object sender, RoutedEventArgs e)
     {
         if (Flow is null)
@@ -127,6 +117,7 @@ public sealed partial class MainPage : Page
             await CachedFileManager.CompleteUpdatesAsync(CurrentFlowFile);
         }
     }
+
     private async void OnSaveFlowAs(object sender, RoutedEventArgs e)
     {
         if (Flow is null)
@@ -148,8 +139,62 @@ public sealed partial class MainPage : Page
             await CachedFileManager.CompleteUpdatesAsync(saveFile);
             CurrentFlowFile = saveFile;
         }
-
     }
+
+    #region Pagination Methods
+
+    private void OnNextPage(object sender, RoutedEventArgs e)
+    {
+        if (FlowElements.Count == 0) return;
+
+        int totalPages = (int)Math.Ceiling((double)FlowElements.Count / _elementsPerPage);
+        if (_currentPage < totalPages - 1)
+        {
+            _currentPage++;
+            UpdateDisplayedElements();
+        }
+    }
+
+    private void OnPreviousPage(object sender, RoutedEventArgs e)
+    {
+        if (_currentPage > 0)
+        {
+            _currentPage--;
+            UpdateDisplayedElements();
+        }
+    }
+
+    private void UpdateDisplayedElements()
+    {
+        // Clear current display
+        _displayedElements.Clear();
+
+        // Calculate elements to display for current page
+        int startIndex = _currentPage * _elementsPerPage;
+        int count = Math.Min(_elementsPerPage, FlowElements.Count - startIndex);
+
+        // Add elements for current page
+        _displayedElements.AddRange(FlowElements.Skip(startIndex).Take(count));
+
+        // Update UI
+        UpdatePaginationUI();
+    }
+
+    private void UpdatePaginationUI()
+    {
+        int totalPages = FlowElements.Count > 0
+            ? (int)Math.Ceiling((double)FlowElements.Count / _elementsPerPage)
+            : 1;
+
+        // Update page indicator
+        PageIndicator.Text = $"Page {_currentPage + 1} of {totalPages}";
+
+        // Update button states
+        PrevPageButton.IsEnabled = _currentPage > 0;
+        NextPageButton.IsEnabled = _currentPage < totalPages - 1;
+    }
+
+    #endregion
 
     #region Empty Methods
     private void OnPlay(object sender, RoutedEventArgs e) { }

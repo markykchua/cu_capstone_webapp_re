@@ -103,23 +103,50 @@
                             Symbol="Back"
                             Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
             </Button>
-            <!-- Horizontal Scroll Panel for flow elements (change to ItemRepeater control to allow large HARs? might need tweaks to InteractiveJsonViewer) -->
-            <ScrollViewer x:Name="FlowElementScrollPanel"
-                          Grid.Column="2"
-                          HorizontalScrollMode="Auto"
-                          HorizontalScrollBarVisibility="Auto"
-                          VerticalAlignment="Stretch">
-                <ItemsControl x:Name="HorizontalItems">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal"
-                                        Spacing="10"
-                                        Padding="10"
-                                        VerticalAlignment="Stretch" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                </ItemsControl>
-            </ScrollViewer>
+            <!-- Paginated View Panel for flow elements -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <!-- Main Content Area -->
+                <ScrollViewer Grid.Row="0"
+                              HorizontalScrollMode="Auto"
+                              HorizontalScrollBarVisibility="Auto"
+                              VerticalScrollMode="Auto"
+                              VerticalScrollBarVisibility="Auto">
+                    <ItemsControl x:Name="PagedItems">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"
+                                            Spacing="10"
+                                            Padding="10" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </ScrollViewer>
+                <!-- Pagination Controls -->
+                <StackPanel Grid.Row="1"
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Bottom"
+                            Margin="0,8,0,8">
+                    <Button x:Name="PrevPageButton"
+                            Click="OnPreviousPage"
+                            Margin="5,0">
+                        <SymbolIcon Symbol="Previous" />
+                    </Button>
+                    <TextBlock x:Name="PageIndicator"
+                               VerticalAlignment="Center"
+                               Margin="10,0"
+                               Text="Page 1 of 1" />
+                    <Button x:Name="NextPageButton"
+                            Click="OnNextPage"
+                            Margin="5,0">
+                        <SymbolIcon Symbol="Next" />
+                    </Button>
+                </StackPanel>
+            </Grid>
         </Grid>
         <!-- Bottom Section (reserved for orchestrator info display) -->
         <Border Grid.Row="2"
