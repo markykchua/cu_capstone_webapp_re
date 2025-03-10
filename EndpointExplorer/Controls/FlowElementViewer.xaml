@@ -14,8 +14,8 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <Border BorderBrush="LightGray"
-                        BorderThickness="1"
+                <Border BorderBrush="{x:Bind RequestColor, Mode=OneWay}"
+                        BorderThickness="2"
                         Padding="8"
                         CornerRadius="4"
                         Grid.Column="0">

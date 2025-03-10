@@ -75,6 +75,7 @@ public sealed partial class FlowElementViewer : UserControl, INotifyPropertyChan
                 _isRequestExpanded = value;
                 NotifyPropertyChanged();
                 NotifyPropertyChanged(nameof(RequestToggleIcon));
+                NotifyPropertyChanged(nameof(IsRequestCollapsed));
             }
         }
     }
@@ -89,6 +90,7 @@ public sealed partial class FlowElementViewer : UserControl, INotifyPropertyChan
                 _isResponseExpanded = value;
                 NotifyPropertyChanged();
                 NotifyPropertyChanged(nameof(ResponseToggleIcon));
+                NotifyPropertyChanged(nameof(IsResponseCollapsed));
             }
         }
     }
@@ -102,6 +104,8 @@ public sealed partial class FlowElementViewer : UserControl, INotifyPropertyChan
             {
                 _isCurrentElement = value;
                 NotifyPropertyChanged();
+                NotifyPropertyChanged(nameof(RequestColor));
+                NotifyPropertyChanged(nameof(ResponseStatusColor));
             }
         }
     }
@@ -193,10 +197,10 @@ public sealed partial class FlowElementViewer : UserControl, INotifyPropertyChan
     private Color GetMutedColor(Color color)
     {
         return Color.FromArgb(
-            color.A,
-            (byte)(color.R * 0.8),
-            (byte)(color.G * 0.8),
-            (byte)(color.B * 0.8)
+            (byte)(color.A * 0.5),
+            (byte)(color.R * 1),
+            (byte)(color.G * 1),
+            (byte)(color.B * 1)
         );
     }
 }

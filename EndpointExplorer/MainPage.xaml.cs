@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 using EndpointExplorer.Controls;
 using Windows.Foundation;
 using Windows.Storage.Pickers;
@@ -8,12 +9,14 @@ namespace EndpointExplorer;
 public sealed partial class MainPage : Page
 {
     public ObservableCollection<FlowElementViewer> FlowElements { get; } = new ObservableCollection<FlowElementViewer>();
+    FlowElementViewer CurrentElement => FlowElements.FirstOrDefault(e => e.IsCurrentElement);
     private StorageFile CurrentFlowFile = null; // need to display somewhere
 
     // Pagination properties
     private int _currentPage = 0;
     private int _elementsPerPage = 5;
     private ObservableCollection<FlowElementViewer> _displayedElements = new ObservableCollection<FlowElementViewer>();
+    private Orchestrator _orchestrator;
 
     public MainPage()
     {
@@ -25,7 +28,17 @@ public sealed partial class MainPage : Page
 
     public Thickness PanelMargin { get; private set; }
     public Symbol PanelIcon { get; private set; }
-    public UserFlow Flow = null;
+    private UserFlow _flow;
+    public UserFlow Flow
+    {
+        get => _flow;
+        private set
+        {
+            _flow = value;
+            Flow.FindRelations();
+            _orchestrator = new Orchestrator(Flow);
+        }
+    }
 
     private void TogglePane(object sender, RoutedEventArgs e)
     {
@@ -180,6 +193,15 @@ public sealed partial class MainPage : Page
         UpdatePaginationUI();
     }
 
+    private void UpdateSingleDisplayedElement(FlowElementViewer element)
+    {
+        int index = FlowElements.IndexOf(element);
+        if (index >= _currentPage * _elementsPerPage && index < (_currentPage + 1) * _elementsPerPage)
+        {
+            _displayedElements[index - _currentPage * _elementsPerPage] = element;
+        }
+    }
+
     private void UpdatePaginationUI()
     {
         int totalPages = FlowElements.Count > 0
@@ -197,9 +219,37 @@ public sealed partial class MainPage : Page
     #endregion
 
     #region Empty Methods
-    private void OnPlay(object sender, RoutedEventArgs e) { }
+    private void OnPlay(object sender, RoutedEventArgs e)
+    {
+        if (Flow is null)
+        {
+            //popup error? tbd
+            return;
+        }
+        FlowElements.First().IsCurrentElement = true;
+    }
     private void OnRestart(object sender, RoutedEventArgs e) { }
-    private void OnStepForward(object sender, RoutedEventArgs e) { }
+    private async Task OnStepForward(object sender, RoutedEventArgs e)
+    {
+        if (CurrentElement is null)
+        {
+            //popup error? tbd
+            return;
+        }
+        int currentIndex = FlowElements.IndexOf(CurrentElement);
+        var replayed = await _orchestrator.PlayNext();
+        FlowElements[currentIndex] = new FlowElementViewer { FlowElement = replayed };
+        Flow.FlowElements[currentIndex] = replayed;
+        if (currentIndex < FlowElements.Count - 1)
+        {
+            FlowElements[currentIndex + 1].IsCurrentElement = true;
+            UpdateSingleDisplayedElement(FlowElements[currentIndex]);
+        }
+        if (currentIndex < FlowElements.Count && (currentIndex + 1) % _elementsPerPage == 0)
+        {
+            OnNextPage(sender, e);
+        }
+    }
     private void OnStop(object sender, RoutedEventArgs e) { }
     #endregion
 }
