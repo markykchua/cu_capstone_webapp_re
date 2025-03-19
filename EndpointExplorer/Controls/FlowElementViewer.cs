@@ -10,6 +10,7 @@ public sealed partial class FlowElementViewer : UserControl, INotifyPropertyChan
     private bool _isRequestExpanded = false;
     private bool _isResponseExpanded = false;
     private bool _isCurrentElement = false;
+    public event EventHandler<JsonEditEventArgs> JsonEdited;
 
     public FlowElementViewer()
     {
@@ -59,6 +60,12 @@ public sealed partial class FlowElementViewer : UserControl, INotifyPropertyChan
     private void ToggleResponseExpand_Click(object sender, RoutedEventArgs e)
     {
         IsResponseExpanded = !IsResponseExpanded;
+    }
+
+    private void OnJsonEdited(object sender, JsonEditEventArgs e)
+    {
+        // Forward the event up
+        JsonEdited?.Invoke(this, e);
     }
 
     #endregion

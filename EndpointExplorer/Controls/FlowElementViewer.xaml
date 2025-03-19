@@ -35,7 +35,8 @@
                         <!-- Expanded Request View -->
                         <StackPanel Visibility="{x:Bind IsRequestExpanded, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
                             <local:InteractiveJsonViewerItem Token="{x:Bind RequestToken, Mode=OneWay}"
-                                                             FlowElement="{x:Bind FlowElement, Mode=OneWay}" />
+                                                             FlowElement="{x:Bind FlowElement, Mode=OneWay}"
+                                                             JsonEdited="OnJsonEdited" />
                         </StackPanel>
                     </StackPanel>
                 </Border>
@@ -77,7 +78,8 @@
                         <!-- Expanded Response View -->
                         <StackPanel Visibility="{x:Bind IsResponseExpanded, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
                             <local:InteractiveJsonViewerItem Token="{x:Bind ResponseToken, Mode=OneWay}"
-                                                             FlowElement="{x:Bind FlowElement, Mode=OneWay}" />
+                                                             FlowElement="{x:Bind FlowElement, Mode=OneWay}"
+                                                             JsonEdited="OnJsonEdited" />
                         </StackPanel>
                     </StackPanel>
                 </Border>

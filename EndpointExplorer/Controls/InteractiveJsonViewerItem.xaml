@@ -5,6 +5,23 @@
              xmlns:json="using:Newtonsoft.Json.Linq">
     <UserControl.Resources>
         <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+        <MenuFlyout x:Name="JsonItemContextMenu">
+            <MenuFlyoutItem Text="Edit"
+                            Click="EditMenuItem_Click">
+                <MenuFlyoutItem.Icon>
+                    <SymbolIcon Symbol="Edit" />
+                </MenuFlyoutItem.Icon>
+            </MenuFlyoutItem>
+        </MenuFlyout>
+        <ContentDialog x:Name="EditDialog"
+                       PrimaryButtonText="Save"
+                       CloseButtonText="Cancel"
+                       DefaultButton="Primary">
+            <TextBox x:Name="EditTextBox"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     Height="200" />
+        </ContentDialog>
     </UserControl.Resources>
     <Grid x:Name="RootGrid">
         <Border BorderBrush="Gray"
@@ -26,7 +43,8 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="json:JToken">
                                 <local:InteractiveJsonViewerItem Token="{x:Bind}"
-                                                                 FlowElement="{Binding FlowElement, ElementName=RootGrid}" />
+                                                                 FlowElement="{Binding FlowElement, ElementName=RootGrid}"
+                                                                 JsonEdited="OnJsonEdited" />
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
@@ -37,7 +55,8 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="json:JToken">
                                 <local:InteractiveJsonViewerItem Token="{x:Bind}"
-                                                                 FlowElement="{Binding FlowElement, ElementName=RootGrid}" />
+                                                                 FlowElement="{Binding FlowElement, ElementName=RootGrid}"
+                                                                 JsonEdited="OnJsonEdited" />
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
@@ -50,15 +69,13 @@
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="- " />
                                     <local:InteractiveJsonViewerItem Token="{x:Bind}"
-                                                                     FlowElement="{Binding FlowElement, ElementName=RootGrid}" />
+                                                                     FlowElement="{Binding FlowElement, ElementName=RootGrid}"
+                                                                     JsonEdited="OnJsonEdited" />
                                 </StackPanel>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </StackPanel>
-                <!-- JValue (don't think this is used) -->
-                <TextBlock Text="{x:Bind TokenValue}"
-                           Visibility="{x:Bind IsJValue, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
             </Grid>
         </Border>
     </Grid>

@@ -151,7 +151,24 @@
         <!-- Bottom Section (reserved for orchestrator info display) -->
         <Border Grid.Row="2"
                 Height="100"
-                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                Margin="0,10,0,0" />
+                BorderBrush="Gray"
+                BorderThickness="4"
+                Background="Black"
+                Margin="0,10,0,0">
+            <ScrollViewer x:Name="LogScrollViewer"
+                          VerticalScrollMode="Auto">
+                <ItemsControl x:Name="LogList"
+                              ItemsSource="{x:Bind LogMessages, Mode=OneWay}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="local:LogMessage">
+                            <TextBlock Text="{x:Bind Text}"
+                                       Foreground="{x:Bind Color}"
+                                       FontFamily="Consolas"
+                                       TextWrapping="Wrap" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Border>
     </Grid>
 </Page>

@@ -1,5 +1,6 @@
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
+using Newtonsoft.Json;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -18,12 +19,125 @@ public sealed partial class InteractiveJsonViewerItem : UserControl
     public bool HasInlineValue => Token is JProperty prop && ((prop.Value is JValue) || (prop.Value is JObject || prop.Value is JArray) && Token.Values().Count() == 0);
     public bool ShowChildren => Children.Count > 0 && !HasInlineValue;
     public event PropertyChangedEventHandler PropertyChanged;
+    public event EventHandler<JsonEditEventArgs> JsonEdited;
     public InteractiveJsonViewerItem()
     {
         this.InitializeComponent();
         //placeholder
-        this.Tapped += InteractiveJsonViewerItem_Tapped;
+        this.RightTapped += Border_RightTapped;
     }
+
+    private void Border_RightTapped(object sender, RightTappedRoutedEventArgs e)
+    {
+        // Show the context menu at the position of the pointer
+        JsonItemContextMenu.ShowAt(sender as UIElement, e.GetPosition(sender as UIElement));
+
+        // Mark the event as handled
+        e.Handled = true;
+    }
+
+    private async void EditMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        EditDialog.Title = IsJProperty ? $"Edit '{PropertyName}'" : "Edit Value";
+        EditTextBox.Text = GetEditText();
+
+        await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(
+        Windows.UI.Core.CoreDispatcherPriority.Normal,
+        async () =>
+        {
+            // Your dialog code here
+            ContentDialog editDialog = new ContentDialog()
+            {
+                Title = IsJProperty ? $"Edit '{PropertyName}'" : "Edit Value",
+                PrimaryButtonText = "Save",
+                CloseButtonText = "Cancel",
+                DefaultButton = ContentDialogButton.Primary,
+                XamlRoot = this.XamlRoot
+            };
+
+            TextBox editTextBox = new TextBox
+            {
+                AcceptsReturn = true,
+                TextWrapping = TextWrapping.Wrap,
+                Height = 200,
+                Text = GetEditText()
+            };
+
+            editDialog.Content = editTextBox;
+
+            try
+            {
+                var result = await editDialog.ShowAsync();
+                if (result == ContentDialogResult.Primary)
+                {
+                    ApplyEdit(editTextBox.Text);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle exception
+            }
+        });
+    }
+
+    // Get the text to edit based on the token type
+    private string GetEditText()
+    {
+        if (IsJProperty)
+        {
+            JProperty property = Token as JProperty;
+            return property.Value.ToString(Newtonsoft.Json.Formatting.Indented);
+        }
+        else if (IsJObject || IsJArray)
+        {
+            return Token.ToString(Newtonsoft.Json.Formatting.Indented);
+        }
+        else if (IsJValue)
+        {
+            return TokenValue;
+        }
+        return string.Empty;
+    }
+
+    // Apply the edited value to the token
+    private void ApplyEdit(string editedText)
+    {
+        try
+        {
+            JToken newValue;
+            try
+            {
+                newValue = JToken.Parse(editedText);
+            }
+            catch (JsonReaderException)
+            {
+                // If the edited text is not valid JSON, treat it as a string
+                newValue = editedText;
+            }
+
+            // Parse the edited text based on the original token type
+            if (IsJProperty)
+            {
+                Console.WriteLine($"Editing property with value: {editedText} and type: {Token.Type}");
+                JsonEdited?.Invoke(this, new JsonEditEventArgs(Token.Path, newValue));
+            }
+            else if (IsJObject || IsJArray || IsJValue)
+            {
+                newValue = JToken.Parse(editedText);
+
+                // Raise the event with the token path and new value
+                JsonEdited?.Invoke(this, new JsonEditEventArgs(Token.Path, newValue));
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle parsing errors
+            // You might want to show an error message to the user
+            System.Diagnostics.Debug.WriteLine($"Error parsing JSON: {ex.Message}");
+        }
+    }
+
+
     public string InlineValue
     {
         get
@@ -45,10 +159,6 @@ public sealed partial class InteractiveJsonViewerItem : UserControl
             }
             return returnString;
         }
-    }
-
-    private void InteractiveJsonViewerItem_Tapped(object sender, TappedRoutedEventArgs e)
-    {
     }
 
     #region Dependency Properties
@@ -84,6 +194,12 @@ public sealed partial class InteractiveJsonViewerItem : UserControl
             item.OnPropertyChanged(nameof(PropertyName));
             item.OnPropertyChanged(nameof(TokenValue));
         }
+    }
+
+    private void OnJsonEdited(object sender, JsonEditEventArgs e)
+    {
+        // Forward the event
+        JsonEdited?.Invoke(this, e);
     }
 
 
@@ -145,12 +261,6 @@ public sealed partial class InteractiveJsonViewerItem : UserControl
         OnEditToken(FlowElement, Token);
     }
 
-    /// <summary>
-    /// Called when the user requests to edit this token.
-    /// Override this method to open your custom edit interface.
-    /// </summary>
-    /// <param name="flowElement">The associated FlowElement.</param>
-    /// <param name="token">The selected JSON token.</param>
     private void OnEditToken(FlowElement flowElement, JToken token)
     {
         // placeholder
@@ -169,4 +279,16 @@ public class JTokenEmptyConverter : IValueConverter
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)
         => throw new NotImplementedException();
+}
+
+public class JsonEditEventArgs : EventArgs
+{
+    public string Path { get; }
+    public JToken NewValue { get; }
+
+    public JsonEditEventArgs(string path, JToken newValue)
+    {
+        Path = path;
+        NewValue = newValue;
+    }
 }

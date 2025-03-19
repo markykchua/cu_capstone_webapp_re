@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Drawing;
 using System.Threading.Tasks;
 using EndpointExplorer.Controls;
 using Windows.Foundation;
@@ -9,6 +10,8 @@ namespace EndpointExplorer;
 public sealed partial class MainPage : Page
 {
     public ObservableCollection<FlowElementViewer> FlowElements { get; } = new ObservableCollection<FlowElementViewer>();
+    public ObservableCollection<LogMessage> LogMessages { get; } = new ObservableCollection<LogMessage>();
+
     FlowElementViewer CurrentElement => FlowElements.FirstOrDefault(e => e.IsCurrentElement);
     private StorageFile CurrentFlowFile = null; // need to display somewhere
 
@@ -58,6 +61,7 @@ public sealed partial class MainPage : Page
         Flow = UserFlow.FromHar(har);
 
         LoadFlowElements();
+        Log("Flow imported from HAR file", LogType.Success);
     }
 
     private async void OnLoadFlow(object sender, RoutedEventArgs e)
@@ -71,12 +75,12 @@ public sealed partial class MainPage : Page
         JObject loaded = JToken.Parse(fileContents) as JObject;
         Flow = loaded.ToObject<UserFlow>();
         LoadFlowElements();
+        Log("Flow loaded", LogType.Success);
     }
 
     private void LoadFlowElements()
     {
         if (Flow == null) return;
-        Console.WriteLine($"Elements per page: {_elementsPerPage}");
 
         // Clear existing elements
         FlowElements.Clear();
@@ -89,6 +93,7 @@ public sealed partial class MainPage : Page
             var elem = Flow.FlowElements[i];
             var viewer = new FlowElementViewer();
             viewer.FlowElement = elem;
+            viewer.JsonEdited += OnFlowElementEdited;
             FlowElements.Add(viewer);
         }
         UpdateDisplayedElements();
@@ -116,7 +121,7 @@ public sealed partial class MainPage : Page
     {
         if (Flow is null)
         {
-            //popup error? tbd
+            Log("No flow to save", LogType.Error);
             return;
         }
         if (CurrentFlowFile is null)
@@ -128,6 +133,8 @@ public sealed partial class MainPage : Page
             CachedFileManager.DeferUpdates(CurrentFlowFile);
             await FileIO.WriteTextAsync(CurrentFlowFile, JToken.FromObject(Flow).ToString());
             await CachedFileManager.CompleteUpdatesAsync(CurrentFlowFile);
+
+            Log($"Flow saved in {CurrentFlowFile.Name}", LogType.Success);
         }
     }
 
@@ -135,7 +142,7 @@ public sealed partial class MainPage : Page
     {
         if (Flow is null)
         {
-            //popup error? tbd
+            Log("No flow to save", LogType.Error);
             return;
         }
         var fileSavePicker = new FileSavePicker();
@@ -152,9 +159,60 @@ public sealed partial class MainPage : Page
             await CachedFileManager.CompleteUpdatesAsync(saveFile);
             CurrentFlowFile = saveFile;
         }
+        Log($"Flow saved as {CurrentFlowFile.Name}", LogType.Success);
+    }
+
+    public void Log(string message, LogType logType)
+    {
+        SolidColorBrush color = logType switch
+        {
+            LogType.Info => new SolidColorBrush(Windows.UI.Color.FromArgb(255, 128, 128, 128)),
+            LogType.Success => new SolidColorBrush(Windows.UI.Color.FromArgb(255, 0, 255, 0)),
+            LogType.Warning => new SolidColorBrush(Windows.UI.Color.FromArgb(255, 255, 165, 0)),
+            LogType.Error => new SolidColorBrush(Windows.UI.Color.FromArgb(255, 255, 0, 0)),
+            _ => new SolidColorBrush(Windows.UI.Color.FromArgb(255, 128, 128, 128)),
+        };
+
+        Log(message, color);
+    }
+    public void Log(string message, SolidColorBrush color)
+    {
+        LogMessages.Add(new LogMessage { Text = message, Color = color });
+
+        LogScrollViewer.ChangeView(null, LogScrollViewer.ExtentHeight, null);
+    }
+
+    public enum LogType
+    {
+        Info,
+        Success,
+        Warning,
+        Error
     }
 
     #region Pagination Methods
+
+    private void OnFlowElementEdited(object sender, JsonEditEventArgs e)
+    {
+        if (sender is FlowElementViewer viewer)
+        {
+            int index = FlowElements.IndexOf(viewer);
+            JObject updated = FlowElements[index].FlowElement.Value;
+            updated.SelectToken(e.Path).Replace(e.NewValue);
+            if (e.Path.StartsWith("request", StringComparison.OrdinalIgnoreCase))
+            {
+                FlowElements[index].FlowElement.UpdateRequest(updated["Request"] as JObject);
+                FlowElements[index] = new FlowElementViewer { FlowElement = FlowElements[index].FlowElement, IsRequestExpanded = viewer.IsRequestExpanded, IsResponseExpanded = viewer.IsResponseExpanded };
+                FlowElements[index].JsonEdited += OnFlowElementEdited;
+                UpdateSingleDisplayedElement(FlowElements[index]);
+            }
+            else
+            {
+                Console.WriteLine("Why are you trying to edit this?");
+            }
+            Log($"Edited {e.Path} to {e.NewValue}", LogType.Info);
+        }
+    }
 
     private void OnNextPage(object sender, RoutedEventArgs e)
     {
@@ -179,17 +237,10 @@ public sealed partial class MainPage : Page
 
     private void UpdateDisplayedElements()
     {
-        // Clear current display
         _displayedElements.Clear();
-
-        // Calculate elements to display for current page
         int startIndex = _currentPage * _elementsPerPage;
         int count = Math.Min(_elementsPerPage, FlowElements.Count - startIndex);
-
-        // Add elements for current page
         _displayedElements.AddRange(FlowElements.Skip(startIndex).Take(count));
-
-        // Update UI
         UpdatePaginationUI();
     }
 
@@ -223,22 +274,35 @@ public sealed partial class MainPage : Page
     {
         if (Flow is null)
         {
-            //popup error? tbd
+            Log("No flow to play, please load flow before starting playback", LogType.Warning);
             return;
         }
         FlowElements.First().IsCurrentElement = true;
+        Log("Playback started", LogType.Info);
     }
-    private void OnRestart(object sender, RoutedEventArgs e) { }
+    private void OnRestart(object sender, RoutedEventArgs e)
+    {
+        OnStop(sender, e);
+        OnPlay(sender, e);
+    }
     private async Task OnStepForward(object sender, RoutedEventArgs e)
     {
         if (CurrentElement is null)
         {
-            //popup error? tbd
+            Log("No current element to step forward from", LogType.Warning);
             return;
         }
         int currentIndex = FlowElements.IndexOf(CurrentElement);
         var replayed = await _orchestrator.PlayNext();
-        FlowElements[currentIndex] = new FlowElementViewer { FlowElement = replayed };
+        Log($"Replayed {replayed.Request.Method} {replayed.Request.Url} and got response with status {replayed.Response.Status}", replayed.Response.Status switch
+        {
+            >= 500 => LogType.Warning,
+            >= 400 => LogType.Error,
+            >= 300 => LogType.Warning,
+            >= 200 => LogType.Success,
+            _ => LogType.Info
+        });
+        FlowElements[currentIndex] = new FlowElementViewer { FlowElement = replayed, IsRequestExpanded = CurrentElement.IsRequestExpanded, IsResponseExpanded = CurrentElement.IsResponseExpanded };
         Flow.FlowElements[currentIndex] = replayed;
         if (currentIndex < FlowElements.Count - 1)
         {
@@ -250,6 +314,12 @@ public sealed partial class MainPage : Page
             OnNextPage(sender, e);
         }
     }
-    private void OnStop(object sender, RoutedEventArgs e) { }
+    private void OnStop(object sender, RoutedEventArgs e)
+    {
+        Log("Playback stopped", LogType.Info);
+        _currentPage = 0;
+        FlowElements.ForEach(e => e.IsCurrentElement = false);
+        UpdateDisplayedElements();
+    }
     #endregion
 }
