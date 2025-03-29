@@ -26,7 +26,7 @@ public class ParsedResponse
         Status = response["status"].Value<int>();
         Headers = response.ContainsKey("headers") ? (response["headers"] as JArray).DistinctBy(h => h["name"]).ToDictionary(h => h["name"].Value<string>(), h => h["value"].Value<string>()) : new Dictionary<string, string>();
         Body = response["content"]?["text"]?.Value<string>() ?? "";
-        Cookies = (response["cookies"] as JArray ?? new JArray()).ToDictionary(c => c["name"].Value<string>(), c => c["value"].Value<string>());
+        Cookies = (response["cookies"].Distinct() as JArray ?? new JArray()).ToDictionary(c => c["name"].Value<string>(), c => c["value"].Value<string>());
     }
     public ParsedResponse(IFlurlResponse response)
     {

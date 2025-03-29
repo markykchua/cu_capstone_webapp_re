@@ -16,6 +16,8 @@
     <ApplicationPublisher>EndpointExplorer</ApplicationPublisher>
     <!-- Package Description -->
     <Description>EndpointExplorer powered by Uno Platform.</Description>
+    
+    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
     <ValidateExecutableReferencesMatchSelfContained>false</ValidateExecutableReferencesMatchSelfContained>
     <!--
       If you encounter this error message:
@@ -44,7 +46,6 @@
       ThemeService;
     </UnoFeatures>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)'=='Debug' or '$(IsUiAutomationMappingEnabled)'=='True'">
     <IsUiAutomationMappingEnabled>True</IsUiAutomationMappingEnabled>
     <DefineConstants>$(DefineConstants);USE_UITESTS</DefineConstants>

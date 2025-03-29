@@ -72,8 +72,8 @@
                             DisplayMode="Inline"
                             OpenPaneLength="250"
                             CompactPaneLength="0"
-                            IsPaneOpen="True">
-                <muxc:SplitView.Pane>
+                            IsPaneOpen="False">
+                <!-- <muxc:SplitView.Pane>
                     <ScrollViewer>
                         <StackPanel>
                             <muxc:Expander Header="Section 1"
@@ -88,7 +88,7 @@
                             </muxc:Expander>
                         </StackPanel>
                     </ScrollViewer>
-                </muxc:SplitView.Pane>
+                </muxc:SplitView.Pane> ! -->
             </muxc:SplitView>
             <!-- Toggle button for left vertical panel -->
             <Button Grid.Column="1"
