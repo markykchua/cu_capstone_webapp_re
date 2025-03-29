@@ -1,9 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Data;
 
-namespace EndpointExplorer;
-
-// XAML didn't want to cooperate
+namespace EndpointExplorer.Converters;
 public class BoolToGridLengthConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)

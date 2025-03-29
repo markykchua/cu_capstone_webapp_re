@@ -1,51 +1,60 @@
-using System.Collections.ObjectModel;
 using EndpointExplorer.Controls;
-using Windows.Storage.Pickers;
+using Microsoft.UI.Text;
+using Microsoft.UI.Xaml.Input;
 using Newtonsoft.Json;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
+using Windows.Storage.Pickers;
 using Windows.Storage.Provider;
 
 namespace EndpointExplorer;
 
 public sealed partial class MainPage : Page
 {
+    // bindings
     public ObservableCollection<FlowElementViewer> FlowElements { get; } = new ObservableCollection<FlowElementViewer>();
     public ObservableCollection<LogMessage> LogMessages { get; } = new ObservableCollection<LogMessage>();
+    public ObservableCollection<ExternalVariableViewModel> ObservableExternalVariables { get; } = new ObservableCollection<ExternalVariableViewModel>();
 
     FlowElementViewer CurrentElement => FlowElements.FirstOrDefault(e => e.IsCurrentElement);
     private StorageFile CurrentFlowFile = null;
-
-    // pagination
     private int _currentPage = 0;
     private int _elementsPerPage = 5;
     private ObservableCollection<FlowElementViewer> _displayedElements = new ObservableCollection<FlowElementViewer>();
     private Orchestrator _orchestrator;
     private UserFlow _originalFlow; // stores loaded/saved state
+    private UserFlow _flow; // working copy
 
     public MainPage()
     {
         this.InitializeComponent();
         PagedItems.ItemsSource = _displayedElements;
+        ExternalVariablesListView.ItemsSource = ObservableExternalVariables;
         UpdatePaginationUI();
     }
 
-    private UserFlow _flow; // working copy
     public UserFlow Flow
     {
         get => _flow;
         private set
         {
-            _flow = value; // set working copy
+            if (ReferenceEquals(_flow, value)) return;
+
+            _flow = value;
             if (_flow != null)
             {
                 _orchestrator = new Orchestrator(_flow);
+                UpdateExternalVariablesView();
             }
             else
             {
                 _orchestrator = null;
+                UpdateExternalVariablesView();
             }
         }
     }
 
+    // --- Deep Clone Helper ---
     private UserFlow DeepCloneFlow(UserFlow sourceFlow)
     {
         if (sourceFlow == null) return null;
@@ -59,6 +68,7 @@ public sealed partial class MainPage : Page
             return null;
         }
     }
+
     private void TogglePane(object sender, RoutedEventArgs e)
     {
         LeftPanel.IsPaneOpen = !LeftPanel.IsPaneOpen;
@@ -68,18 +78,17 @@ public sealed partial class MainPage : Page
     private async void OnImportFromHAR(object sender, RoutedEventArgs e)
     {
         (StorageFile file, string fileContents) = await GetFromFilePicker(".har");
-        if (string.IsNullOrEmpty(fileContents))
-        {
-            return;
-        }
-        CurrentFlowFile = null; // imported but not saved
+        if (string.IsNullOrEmpty(fileContents)) return;
+
+        CurrentFlowFile = null;
         try
         {
             JObject har = JToken.Parse(fileContents) as JObject;
             _originalFlow = UserFlow.FromHar(har);
+            if (_originalFlow == null) throw new InvalidOperationException("Failed to parse HAR content into UserFlow.");
             _originalFlow.FindRelations();
 
-            Flow = DeepCloneFlow(_originalFlow);
+            Flow = DeepCloneFlow(_originalFlow); // create working copy
 
             if (Flow != null)
             {
@@ -106,18 +115,15 @@ public sealed partial class MainPage : Page
     private async void OnLoadFlow(object sender, RoutedEventArgs e)
     {
         (StorageFile file, string fileContents) = await GetFromFilePicker(".json");
-        if (string.IsNullOrEmpty(fileContents))
-        {
-            return;
-        }
+        if (string.IsNullOrEmpty(fileContents)) return;
 
         try
         {
             JObject loaded = JToken.Parse(fileContents) as JObject;
             _originalFlow = loaded.ToObject<UserFlow>();
+            if (_originalFlow == null) throw new InvalidOperationException("Failed to parse JSON content into UserFlow.");
             _originalFlow.FindRelations();
 
-            // create working copy
             Flow = DeepCloneFlow(_originalFlow);
 
             if (Flow != null)
@@ -145,6 +151,29 @@ public sealed partial class MainPage : Page
         }
     }
 
+    private async Task OnSaveFlow(object sender, RoutedEventArgs e)
+    {
+        if (Flow is null) { Log("No flow to save", LogType.Error); return; }
+        if (CurrentFlowFile is null) { await OnSaveFlowAs(sender, e); }
+        else { await SaveFlowToFile(CurrentFlowFile); }
+    }
+
+    private async Task OnSaveFlowAs(object sender, RoutedEventArgs e)
+    {
+        if (Flow is null) { Log("No flow to save", LogType.Error); return; }
+
+        var fileSavePicker = new FileSavePicker();
+        fileSavePicker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary; // Changed default location
+        fileSavePicker.SuggestedFileName = "flow.json";
+        fileSavePicker.FileTypeChoices.Add("JSON Flow File", new List<string>() { ".json" });
+
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(((App)Application.Current).MainWindow);
+        WinRT.Interop.InitializeWithWindow.Initialize(fileSavePicker, hwnd);
+
+        StorageFile saveFile = await fileSavePicker.PickSaveFileAsync();
+        if (saveFile != null) { await SaveFlowToFile(saveFile); }
+    }
+
     private void LoadFlowElements()
     {
         if (Flow == null) return;
@@ -158,10 +187,10 @@ public sealed partial class MainPage : Page
             var viewer = new FlowElementViewer();
             viewer.FlowElement = elem;
             viewer.JsonEdited += OnFlowElementEdited;
-
             FlowElements.Add(viewer);
         }
         UpdateDisplayedElements();
+        UpdateExternalVariablesView();
     }
 
     private async Task<(StorageFile, string)> GetFromFilePicker(string fileExtension)
@@ -176,10 +205,7 @@ public sealed partial class MainPage : Page
         var pickedFile = await fileOpenPicker.PickSingleFileAsync();
         if (pickedFile != null)
         {
-            try
-            {
-                return (pickedFile, await FileIO.ReadTextAsync(pickedFile));
-            }
+            try { return (pickedFile, await FileIO.ReadTextAsync(pickedFile)); }
             catch (Exception ex)
             {
                 Log($"Error reading file {pickedFile.Name}: {ex.Message}", LogType.Error);
@@ -188,13 +214,11 @@ public sealed partial class MainPage : Page
         }
         return (null, null);
     }
+
     private async Task SaveFlowToFile(StorageFile file)
     {
-        if (Flow is null)
-        {
-            Log("No flow data to save.", LogType.Error);
-            return;
-        }
+        if (Flow is null) { Log("No flow data to save.", LogType.Error); return; }
+
         try
         {
             string flowJson = JToken.FromObject(Flow).ToString(Formatting.Indented);
@@ -208,6 +232,7 @@ public sealed partial class MainPage : Page
                 _originalFlow = DeepCloneFlow(Flow);
                 CurrentFlowFile = file;
                 Log($"Flow saved in {file.Name}", LogType.Success);
+                UpdateExternalVariablesView();
             }
             else
             {
@@ -220,47 +245,11 @@ public sealed partial class MainPage : Page
         }
     }
 
-
-    private async Task OnSaveFlow(object sender, RoutedEventArgs e)
-    {
-        if (Flow is null)
-        {
-            Log("No flow to save", LogType.Error);
-            return;
-        }
-        if (CurrentFlowFile is null)
-        {
-            await OnSaveFlowAs(sender, e);
-        }
-        else
-        {
-            await SaveFlowToFile(CurrentFlowFile);
-        }
-    }
-
-
-    private async Task OnSaveFlowAs(object sender, RoutedEventArgs e)
-    {
-        if (Flow is null)
-        {
-            Log("No flow to save", LogType.Error);
-            return;
-        }
-        var fileSavePicker = new FileSavePicker();
-        fileSavePicker.SuggestedStartLocation = PickerLocationId.ComputerFolder;
-        fileSavePicker.SuggestedFileName = "flow.json";
-        fileSavePicker.FileTypeChoices.Add("JSON Flow File", new List<string>() { ".json" });
-        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(((App)Application.Current).MainWindow);
-        WinRT.Interop.InitializeWithWindow.Initialize(fileSavePicker, hwnd);
-        StorageFile saveFile = await fileSavePicker.PickSaveFileAsync();
-        if (saveFile != null)
-        {
-            await SaveFlowToFile(saveFile);
-        }
-    }
-
+    // --- Logging ---
+    public enum LogType { Info, Success, Warning, Error }
     public void Log(string message, LogType logType)
     {
+        // Use Microsoft.UI.Colors for WinUI 3
         SolidColorBrush color = logType switch
         {
             LogType.Info => new SolidColorBrush(Microsoft.UI.Colors.Gray),
@@ -280,7 +269,6 @@ public sealed partial class MainPage : Page
             LogScrollViewer.ChangeView(null, LogScrollViewer.ScrollableHeight, null);
         });
     }
-    public enum LogType { Info, Success, Warning, Error }
 
     #region Pagination Methods
 
@@ -327,7 +315,8 @@ public sealed partial class MainPage : Page
                     }
                     else
                     {
-                        // not supporting response editing currently - not sure if needed
+                        // not handled
+                        Log($"Edited {e.Path} to {e.NewValue}", LogType.Info);
                     }
                 }
                 else
@@ -341,8 +330,6 @@ public sealed partial class MainPage : Page
             }
         }
     }
-
-
 
     private void OnNextPage(object sender, RoutedEventArgs e)
     {
@@ -390,7 +377,6 @@ public sealed partial class MainPage : Page
 
     private void UpdateSingleDisplayedElement(FlowElementViewer newViewer, FlowElementViewer oldViewer)
     {
-        // find index of old viewer in the displayed list
         int indexInDisplayed = -1;
         for (int i = 0; i < _displayedElements.Count; ++i)
         {
@@ -403,23 +389,20 @@ public sealed partial class MainPage : Page
 
         if (indexInDisplayed != -1)
         {
-            // replace old viewer
             _displayedElements[indexInDisplayed] = newViewer;
-            Console.WriteLine($"Replaced viewer at displayed index {indexInDisplayed}.");
+            Debug.WriteLine($"Replaced viewer at displayed index {indexInDisplayed}.");
         }
         else
         {
-            // probably won't happen but just in case
             int indexInFlowElements = FlowElements.IndexOf(newViewer);
-
             if (indexInFlowElements >= 0 && indexInFlowElements >= _currentPage * _elementsPerPage && indexInFlowElements < (_currentPage + 1) * _elementsPerPage)
             {
-                Console.WriteLine($"Viewer should be visible (index {indexInFlowElements}), refreshing displayed elements.");
+                Debug.WriteLine($"Viewer should be visible (index {indexInFlowElements}), refreshing displayed elements.");
                 UpdateDisplayedElements();
             }
             else
             {
-                Console.WriteLine($"Updated viewer (index {indexInFlowElements}) is not on the current page ({_currentPage}).");
+                Debug.WriteLine($"Updated viewer (index {indexInFlowElements}) is not on the current page ({_currentPage}).");
             }
         }
     }
@@ -429,9 +412,9 @@ public sealed partial class MainPage : Page
         int totalPages = FlowElements.Count > 0
             ? (int)Math.Ceiling((double)FlowElements.Count / _elementsPerPage)
             : 1;
-        PageIndicator.Text = $"Page {_currentPage + 1} of {totalPages}";
-        PrevPageButton.IsEnabled = _currentPage > 0;
-        NextPageButton.IsEnabled = _currentPage < totalPages - 1;
+        if (PageIndicator != null) PageIndicator.Text = $"Page {_currentPage + 1} of {totalPages}";
+        if (PrevPageButton != null) PrevPageButton.IsEnabled = _currentPage > 0;
+        if (NextPageButton != null) NextPageButton.IsEnabled = _currentPage < totalPages - 1;
     }
 
     #endregion
@@ -443,7 +426,6 @@ public sealed partial class MainPage : Page
         Log("Resetting flow to original state...", LogType.Info);
         if (_originalFlow != null)
         {
-            // create fresh working copy
             Flow = DeepCloneFlow(_originalFlow);
             if (Flow != null)
             {
@@ -454,6 +436,7 @@ public sealed partial class MainPage : Page
                 Log("Failed to restore flow from original state.", LogType.Error);
                 FlowElements.Clear();
                 _displayedElements.Clear();
+                ObservableExternalVariables.Clear();
                 UpdatePaginationUI();
             }
         }
@@ -472,22 +455,18 @@ public sealed partial class MainPage : Page
 
     private void OnPlay(object sender, RoutedEventArgs e)
     {
-        if (Flow is null)
-        {
-            Log("No flow to play. Please load or import a flow.", LogType.Warning);
-            return;
-        }
+        if (Flow is null) { Log("No flow to play. Please load or import a flow.", LogType.Warning); return; }
+
         if (FlowElements.Any())
         {
+            FlowElements.ForEach(fev => fev.IsCurrentElement = false);
+
             FlowElements.First().IsCurrentElement = true;
             _currentPage = 0;
             UpdateDisplayedElements();
             Log("Playback started", LogType.Info);
         }
-        else
-        {
-            Log("Flow has no elements to play.", LogType.Info);
-        }
+        else { Log("Flow has no elements to play.", LogType.Info); }
     }
 
     private void OnRestart(object sender, RoutedEventArgs e)
@@ -496,6 +475,7 @@ public sealed partial class MainPage : Page
         ResetFlowToOriginal();
         OnPlay(sender, e);
     }
+
     private async Task OnStepForward(object sender, RoutedEventArgs e)
     {
         var currentViewer = CurrentElement;
@@ -508,46 +488,28 @@ public sealed partial class MainPage : Page
                 currentViewer.IsCurrentElement = true;
                 if (_currentPage == 0) UpdateDisplayedElements();
             }
-            else
-            {
-                Log("Cannot step forward: No current element or flow not ready.", LogType.Warning);
-                return;
-            }
+            else { Log("Cannot step forward: No current element or flow not ready.", LogType.Warning); return; }
         }
 
         if (_orchestrator == null || !_orchestrator.FlowElements.Any())
         {
             Log("Cannot step forward: Orchestrator not ready or no more steps.", LogType.Warning);
-            if (currentViewer != null)
-            {
-                currentViewer.IsCurrentElement = false;
-            }
+            if (currentViewer != null) currentViewer.IsCurrentElement = false;
             return;
         }
 
         int currentIndexInViewList = FlowElements.IndexOf(currentViewer);
-        if (currentIndexInViewList < 0)
-        {
-            Log("Error: Current viewer not found in FlowElements list before replay.", LogType.Error);
-            return;
-        }
+        if (currentIndexInViewList < 0) { Log("Error: Current viewer not found in FlowElements list before replay.", LogType.Error); return; }
         var oldViewerInstance = currentViewer;
-
 
         try
         {
             Log($"Executing step {currentIndexInViewList + 1}: {currentViewer.FlowElement.Request.Method} {currentViewer.FlowElement.Request.Url}", LogType.Info);
             var replayedElement = await _orchestrator.PlayNext();
-
             Log($"Response Status: {replayedElement.Response.Status}", replayedElement.Response.Status switch
-            {
-                >= 500 => LogType.Error,
-                >= 400 => LogType.Error,
-                >= 300 => LogType.Warning,
-                >= 200 => LogType.Success,
-                _ => LogType.Info
-            });
+            { >= 500 => LogType.Error, >= 400 => LogType.Error, >= 300 => LogType.Warning, >= 200 => LogType.Success, _ => LogType.Info });
 
+            // --- Replace Viewer Instance ---
             var newViewerForReplayed = new FlowElementViewer
             {
                 FlowElement = replayedElement,
@@ -559,48 +521,186 @@ public sealed partial class MainPage : Page
 
             FlowElements[currentIndexInViewList] = newViewerForReplayed;
             UpdateSingleDisplayedElement(newViewerForReplayed, oldViewerInstance);
+            UpdateExternalVariablesView();
 
             if (currentIndexInViewList < FlowElements.Count - 1)
             {
                 var nextViewer = FlowElements[currentIndexInViewList + 1];
                 nextViewer.IsCurrentElement = true;
-                int nextIndexInDisplayed = -1;
-                for (int i = 0; i < _displayedElements.Count; ++i)
-                {
-                    if (ReferenceEquals(_displayedElements[i], nextViewer))
-                    {
-                        nextIndexInDisplayed = i; break;
-                    }
-                }
-                if (nextIndexInDisplayed != -1)
-                {
-                    UpdateDisplayedElements();
-                }
 
-                if ((currentIndexInViewList + 1) % _elementsPerPage == 0)
-                {
-                    OnNextPage(sender, e);
-                }
+                int nextIndexInDisplayed = -1;
+                for (int i = 0; i < _displayedElements.Count; ++i) { if (ReferenceEquals(_displayedElements[i], nextViewer)) { nextIndexInDisplayed = i; break; } }
+                if (nextIndexInDisplayed != -1) { UpdateDisplayedElements(); }
+
+                if ((currentIndexInViewList + 1) % _elementsPerPage == 0) { OnNextPage(sender, e); }
             }
-            else
-            {
-                Log("End of flow reached.", LogType.Info);
-            }
+            else { Log("End of flow reached.", LogType.Info); }
         }
         catch (InvalidOperationException ex)
         {
             Log($"Playback error: {ex.Message}", LogType.Warning);
-            if (oldViewerInstance != null) { oldViewerInstance.IsCurrentElement = false; }
+            if (oldViewerInstance != null) oldViewerInstance.IsCurrentElement = false;
         }
         catch (Exception ex)
         {
             Log($"Error during step execution: {ex.Message}", LogType.Error);
-            if (oldViewerInstance != null) { oldViewerInstance.IsCurrentElement = false; }
+            if (oldViewerInstance != null) oldViewerInstance.IsCurrentElement = false;
         }
     }
+
     private void OnStop(object sender, RoutedEventArgs e)
     {
         ResetFlowToOriginal();
     }
     #endregion
+
+    #region External Variables (Left Panel)
+
+    private void UpdateExternalVariablesView()
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            try
+            {
+                ObservableExternalVariables.Clear();
+                if (Flow?.ExternalVariables != null)
+                {
+                    var sortedVariables = Flow.ExternalVariables.OrderBy(kv => kv.Key);
+                    foreach (var kvp in sortedVariables)
+                    {
+                        ObservableExternalVariables.Add(new ExternalVariableViewModel(kvp.Key, kvp.Value));
+                    }
+                }
+            }
+            catch (Exception ex) { Log($"Error updating external variables view: {ex.Message}", LogType.Error); }
+        });
+    }
+
+    private void ExternalVariablesListView_RightTapped(object sender, RightTappedRoutedEventArgs e)
+    {
+        var listView = sender as ListView;
+        var tappedViewModel = (e.OriginalSource as FrameworkElement)?.DataContext as ExternalVariableViewModel;
+
+        AddVariableMenuItem.Tag = null;
+        EditVariableMenuItem.Tag = tappedViewModel;
+        DeleteVariableMenuItem.Tag = tappedViewModel;
+
+        EditVariableMenuItem.IsEnabled = tappedViewModel != null;
+        DeleteVariableMenuItem.IsEnabled = tappedViewModel != null;
+
+        ExternalVariablesContextMenu.ShowAt(listView, e.GetPosition(listView));
+        e.Handled = true;
+    }
+
+    private async void AddVariable_Click(object sender, RoutedEventArgs e)
+    {
+        if (Flow is null) { Log("Cannot add variable: No flow loaded.", LogType.Warning); return; }
+
+        var nameBox = new TextBox { PlaceholderText = "Variable Name" };
+        var valueBox = new TextBox { PlaceholderText = "Variable Value (JSON or string)", AcceptsReturn = true, Height = 100, TextWrapping = TextWrapping.Wrap }; // Added TextWrapping
+        var stackPanel = new StackPanel { Spacing = 10 };
+        stackPanel.Children.Add(new TextBlock { Text = "Name:", FontWeight = FontWeights.SemiBold });
+        stackPanel.Children.Add(nameBox);
+        stackPanel.Children.Add(new TextBlock { Text = "Value:", FontWeight = FontWeights.SemiBold });
+        stackPanel.Children.Add(valueBox);
+
+        var dialog = new ContentDialog
+        {
+            Title = "Add External Variable",
+            Content = stackPanel,
+            PrimaryButtonText = "Add",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Primary,
+            XamlRoot = this.XamlRoot
+        };
+
+        try
+        {
+            var result = await dialog.ShowAsync();
+            if (result == ContentDialogResult.Primary)
+            {
+                string name = nameBox.Text.Trim();
+                string valueStr = valueBox.Text;
+
+                if (string.IsNullOrWhiteSpace(name)) { Log("Variable name cannot be empty.", LogType.Warning); return; }
+                if (Flow.ExternalVariables.ContainsKey(name)) { Log($"Variable '{name}' already exists.", LogType.Warning); return; }
+
+                JToken valueToken;
+                try { valueToken = JToken.Parse(valueStr); }
+                catch (JsonReaderException) { valueToken = valueStr; }
+                Flow.ExternalVariables.Add(name, valueToken);
+                UpdateExternalVariablesView();
+                Log($"Added external variable '{name}'.", LogType.Info);
+            }
+        }
+        catch (Exception ex) { Log($"Error showing add variable dialog: {ex.Message}", LogType.Error); }
+    }
+
+    private async void EditVariable_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.Tag is ExternalVariableViewModel vm && vm != null)
+        {
+            if (Flow is null) return;
+
+            string originalName = vm.Key;
+            string editText = vm.TooltipValue;
+            var nameBox = new TextBox { Text = originalName };
+            var valueBox = new TextBox { Text = editText, AcceptsReturn = true, Height = 150, TextWrapping = TextWrapping.Wrap };
+            var stackPanel = new StackPanel { Spacing = 10 };
+            stackPanel.Children.Add(new TextBlock { Text = "Name:", FontWeight = FontWeights.SemiBold });
+            stackPanel.Children.Add(nameBox);
+            stackPanel.Children.Add(new TextBlock { Text = "Value (JSON or string):", FontWeight = FontWeights.SemiBold });
+            stackPanel.Children.Add(valueBox);
+
+            var dialog = new ContentDialog
+            {
+                Title = "Edit External Variable",
+                Content = stackPanel,
+                PrimaryButtonText = "Save",
+                CloseButtonText = "Cancel",
+                DefaultButton = ContentDialogButton.Primary,
+                XamlRoot = this.XamlRoot
+            };
+
+            try
+            {
+                var result = await dialog.ShowAsync();
+                if (result == ContentDialogResult.Primary)
+                {
+                    string newName = nameBox.Text.Trim();
+                    string newValueStr = valueBox.Text;
+
+                    if (string.IsNullOrWhiteSpace(newName)) { Log("Variable name cannot be empty.", LogType.Warning); return; }
+                    if (newName != originalName && Flow.ExternalVariables.ContainsKey(newName)) { Log($"Cannot rename variable: Name '{newName}' already exists.", LogType.Warning); return; }
+
+                    JToken newValueToken;
+                    try { newValueToken = JToken.Parse(newValueStr); }
+                    catch (JsonReaderException) { newValueToken = newValueStr; }
+
+                    if (newName != originalName) { Flow.ExternalVariables.Remove(originalName); }
+                    Flow.ExternalVariables[newName] = newValueToken;
+
+                    UpdateExternalVariablesView();
+                    Log($"Updated external variable '{newName}'.", LogType.Info);
+                }
+            }
+            catch (Exception ex) { Log($"Error showing edit variable dialog: {ex.Message}", LogType.Error); }
+        }
+    }
+
+    private void DeleteVariable_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.Tag is ExternalVariableViewModel vm && vm != null)
+        {
+            if (Flow is null) return;
+            if (Flow.ExternalVariables.Remove(vm.Key))
+            {
+                UpdateExternalVariablesView();
+                Log($"Deleted external variable '{vm.Key}'.", LogType.Info);
+            }
+            else { Log($"Failed to delete variable '{vm.Key}' (not found).", LogType.Warning); }
+        }
+    }
+    #endregion
+
 }

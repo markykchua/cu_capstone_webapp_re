@@ -1,5 +1,5 @@
 using Microsoft.UI.Xaml.Data;
-namespace EndpointExplorer.Controls;
+namespace EndpointExplorer.Converters;
 public class BoolToVisibilityConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
