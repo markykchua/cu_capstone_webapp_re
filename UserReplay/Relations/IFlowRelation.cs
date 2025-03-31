@@ -1,9 +1,8 @@
-namespace UserReplay
+namespace UserReplay;
+
+public interface IFlowRelation
 {
-    public interface IFlowRelation
+    public virtual void InsertRelation(UserFlow flow)
     {
-        public virtual void InsertRelation(UserFlow flow)
-        {
-        }
     }
 }
