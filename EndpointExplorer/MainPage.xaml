@@ -59,12 +59,17 @@
                                 Click="OnImportFromHAR" />
                 <MenuFlyoutItem Text="Load Flow"
                                 Click="OnLoadFlow" />
-                <!-- <MenuFlyoutSeparator /> -->
                 <MenuFlyoutItem Text="Save Flow"
                                 Click="OnSaveFlow" />
                 <MenuFlyoutItem Text="Save Flow As..."
                                 Click="OnSaveFlowAs" />
             </MenuBarItem>
+            <!-- *** ADD Export Menu *** -->
+            <MenuBarItem Title="Export">
+                <MenuFlyoutItem Text="To OpenAPI Specification..."
+                                Click="OnExportToOpenAPI" />
+            </MenuBarItem>
+            <!-- *** END ADD *** -->
         </MenuBar>
         <!-- Action Bar (Centered) -->
         <StackPanel Grid.Row="0"

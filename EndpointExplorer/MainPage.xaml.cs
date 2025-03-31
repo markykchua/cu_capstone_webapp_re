@@ -783,4 +783,84 @@ public sealed partial class MainPage : Page
     }
     #endregion
 
+    #region Export Menu Handlers
+
+    private async void OnExportToOpenAPI(object sender, RoutedEventArgs e)
+    {
+        // 1. Check if a flow is loaded
+        if (Flow is null || !Flow.FlowElements.Any())
+        {
+            Log("No flow loaded or flow is empty. Cannot generate OpenAPI spec.", LogType.Warning);
+            return;
+        }
+
+        Log("Generating OpenAPI specification...", LogType.Info);
+        string openApiSpecJson;
+        try
+        {
+            // 2. Generate the spec
+            openApiSpecJson = Utils.GenerateOpenApiSpec(Flow);
+            if (string.IsNullOrEmpty(openApiSpecJson))
+            {
+                Log("OpenAPI generation returned empty result.", LogType.Warning);
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            Log($"Error generating OpenAPI spec: {ex.Message}", LogType.Error);
+            Debug.WriteLine($"OpenAPI Generation Error: {ex}");
+            return;
+        }
+
+        // 3. Configure File Save Picker
+        var fileSavePicker = new FileSavePicker();
+        fileSavePicker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
+        fileSavePicker.SuggestedFileName = "openapi_spec.json";
+        fileSavePicker.FileTypeChoices.Add("OpenAPI JSON", new List<string>() { ".json" });
+        // Optionally add YAML if your generator supports it or you convert it
+        // fileSavePicker.FileTypeChoices.Add("OpenAPI YAML", new List<string>() { ".yaml", ".yml" });
+
+        // Initialize picker with window handle (required for WinUI)
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(((App)Application.Current).MainWindow);
+        WinRT.Interop.InitializeWithWindow.Initialize(fileSavePicker, hwnd);
+
+        // 4. Show picker and save file
+        StorageFile saveFile = await fileSavePicker.PickSaveFileAsync();
+        if (saveFile != null)
+        {
+            Log($"Attempting to save OpenAPI spec to {saveFile.Name}...", LogType.Info);
+            try
+            {
+                // Prevent updates to the file until saving is complete
+                CachedFileManager.DeferUpdates(saveFile);
+                // Write the generated string to the chosen file
+                await FileIO.WriteTextAsync(saveFile, openApiSpecJson);
+                // Complete updates and report status
+                FileUpdateStatus status = await CachedFileManager.CompleteUpdatesAsync(saveFile);
+
+                if (status == FileUpdateStatus.Complete)
+                {
+                    Log($"OpenAPI specification saved successfully as {saveFile.Name}", LogType.Success);
+                }
+                else
+                {
+                    // If CompleteUpdates fails, the file might be locked or otherwise unusable
+                    Log($"Failed to finalize saving OpenAPI spec to {saveFile.Name}. Status: {status}", LogType.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"Error writing OpenAPI spec to file {saveFile.Name}: {ex.Message}", LogType.Error);
+                Debug.WriteLine($"OpenAPI File Save Error: {ex}");
+            }
+        }
+        else
+        {
+            Log("Export to OpenAPI cancelled.", LogType.Info);
+        }
+    }
+
+    #endregion // End Export Menu Handlers
+
 }
