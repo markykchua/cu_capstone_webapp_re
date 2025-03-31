@@ -1,13 +1,17 @@
 using Microsoft.UI.Xaml.Data;
+using Windows.UI;
+
 namespace EndpointExplorer.Converters;
 
-public class BoolToVisibilityConverter : IValueConverter
+public class ColorToBrushConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
     {
-        bool result = value is bool b && b;
-        Visibility visibility = result ? Visibility.Visible : Visibility.Collapsed;
-        return visibility;
+        if (value is Color color)
+        {
+            return new SolidColorBrush(color);
+        }
+        return new SolidColorBrush(Microsoft.UI.Colors.Transparent);
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)

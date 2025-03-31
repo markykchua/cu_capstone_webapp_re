@@ -701,6 +701,86 @@ public sealed partial class MainPage : Page
             else { Log($"Failed to delete variable '{vm.Key}' (not found).", LogType.Warning); }
         }
     }
+
+    private void OnExportAdded(object sender, ExportChangedEventArgs e)
+    {
+        if (sender is FlowElementViewer viewer && viewer.FlowElement != null)
+        {
+            var flowElement = Flow?.FlowElements.FirstOrDefault(fe => fe == viewer.FlowElement);
+            if (flowElement != null)
+            {
+                if (!flowElement.Exports.ContainsKey(e.Name))
+                {
+                    flowElement.Exports.Add(e.Name, new Export(e.JsonPath, e.Regex));
+                    Log($"Added export '{e.Name}' to element {Flow.FlowElements.IndexOf(flowElement) + 1}", LogType.Info);
+                }
+                else
+                {
+                    Log($"Export '{e.Name}' already exists for element {Flow.FlowElements.IndexOf(flowElement) + 1}.", LogType.Warning);
+                }
+            }
+            else { Log($"Error adding export: FlowElement not found for viewer.", LogType.Error); }
+        }
+    }
+
+    private void OnExportEdited(object sender, ExportChangedEventArgs e)
+    {
+        if (sender is FlowElementViewer viewer && viewer.FlowElement != null)
+        {
+            var flowElement = Flow?.FlowElements.FirstOrDefault(fe => fe == viewer.FlowElement);
+            if (flowElement != null)
+            {
+                if (flowElement.Exports.ContainsKey(e.OriginalName))
+                {
+                    if (e.OriginalName != e.Name)
+                    {
+                        if (flowElement.Exports.ContainsKey(e.Name))
+                        {
+                            Log($"Cannot rename export: Name '{e.Name}' already exists for element {Flow.FlowElements.IndexOf(flowElement) + 1}.", LogType.Warning);
+                            viewer.RefreshExports();
+                            return;
+                        }
+                        flowElement.Exports.Remove(e.OriginalName);
+                        flowElement.Exports.Add(e.Name, new Export(e.JsonPath, e.Regex));
+                        Log($"Renamed export '{e.OriginalName}' to '{e.Name}' and updated details on element {Flow.FlowElements.IndexOf(flowElement) + 1}", LogType.Info);
+                    }
+                    else
+                    {
+                        flowElement.Exports[e.Name] = new Export(e.JsonPath, e.Regex);
+                        Log($"Edited export '{e.Name}' on element {Flow.FlowElements.IndexOf(flowElement) + 1}", LogType.Info);
+                    }
+                }
+                else
+                {
+                    Log($"Cannot edit export: Original name '{e.OriginalName}' not found for element {Flow.FlowElements.IndexOf(flowElement) + 1}.", LogType.Warning);
+                    viewer.RefreshExports();
+                }
+            }
+            else { Log($"Error editing export: FlowElement not found for viewer.", LogType.Error); }
+        }
+    }
+
+    private void OnExportDeleted(object sender, ExportChangedEventArgs e)
+    {
+        if (sender is FlowElementViewer viewer && viewer.FlowElement != null)
+        {
+            var flowElement = Flow?.FlowElements.FirstOrDefault(fe => fe == viewer.FlowElement);
+            if (flowElement != null)
+            {
+                if (flowElement.Exports.Remove(e.Name))
+                {
+                    Log($"Deleted export '{e.Name}' from element {Flow.FlowElements.IndexOf(flowElement) + 1}", LogType.Info);
+                }
+                else
+                {
+                    Log($"Could not delete export '{e.Name}' from element {Flow.FlowElements.IndexOf(flowElement) + 1} (not found in model).", LogType.Warning);
+                    // Refresh viewer just in case its state was wrong
+                    viewer.RefreshExports();
+                }
+            }
+            else { Log($"Error deleting export: FlowElement not found for viewer.", LogType.Error); }
+        }
+    }
     #endregion
 
 }

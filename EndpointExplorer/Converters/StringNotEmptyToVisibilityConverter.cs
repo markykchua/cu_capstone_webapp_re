@@ -1,13 +1,14 @@
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Data;
+using System;
+
 namespace EndpointExplorer.Converters;
 
-public class BoolToVisibilityConverter : IValueConverter
+public class StringNotEmptyToVisibilityConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
     {
-        bool result = value is bool b && b;
-        Visibility visibility = result ? Visibility.Visible : Visibility.Collapsed;
-        return visibility;
+        return (value is string s && !string.IsNullOrEmpty(s)) ? Visibility.Visible : Visibility.Collapsed;
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)

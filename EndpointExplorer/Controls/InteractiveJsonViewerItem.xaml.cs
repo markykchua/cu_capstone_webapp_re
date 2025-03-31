@@ -23,16 +23,13 @@ public sealed partial class InteractiveJsonViewerItem : UserControl
     public InteractiveJsonViewerItem()
     {
         this.InitializeComponent();
-        //placeholder
         this.RightTapped += Border_RightTapped;
     }
 
     private void Border_RightTapped(object sender, RightTappedRoutedEventArgs e)
     {
-        // Show the context menu at the position of the pointer
         JsonItemContextMenu.ShowAt(sender as UIElement, e.GetPosition(sender as UIElement));
 
-        // Mark the event as handled
         e.Handled = true;
     }
 
@@ -45,7 +42,6 @@ public sealed partial class InteractiveJsonViewerItem : UserControl
         Windows.UI.Core.CoreDispatcherPriority.Normal,
         async () =>
         {
-            // Your dialog code here
             ContentDialog editDialog = new ContentDialog()
             {
                 Title = IsJProperty ? $"Edit '{PropertyName}'" : "Edit Value",
@@ -75,12 +71,9 @@ public sealed partial class InteractiveJsonViewerItem : UserControl
             }
             catch (Exception ex)
             {
-                // Handle exception
             }
         });
     }
-
-    // Get the text to edit based on the token type
     private string GetEditText()
     {
         if (IsJProperty)
@@ -99,7 +92,6 @@ public sealed partial class InteractiveJsonViewerItem : UserControl
         return string.Empty;
     }
 
-    // Apply the edited value to the token
     private void ApplyEdit(string editedText)
     {
         try
@@ -115,7 +107,7 @@ public sealed partial class InteractiveJsonViewerItem : UserControl
                 newValue = editedText;
             }
 
-            // Parse the edited text based on the original token type
+            // Parse edited text based on the original token type
             if (IsJProperty)
             {
                 Console.WriteLine($"Editing property with value: {editedText} and type: {Token.Type}");
@@ -132,7 +124,6 @@ public sealed partial class InteractiveJsonViewerItem : UserControl
         catch (Exception ex)
         {
             // Handle parsing errors
-            // You might want to show an error message to the user
             System.Diagnostics.Debug.WriteLine($"Error parsing JSON: {ex.Message}");
         }
     }
@@ -151,11 +142,11 @@ public sealed partial class InteractiveJsonViewerItem : UserControl
             {
                 JTokenType.Array => property.Value.ToString(),
                 JTokenType.Object => property.Value.ToString(),
-                _ => property.Value.ToString(Newtonsoft.Json.Formatting.None)
+                _ => property.Value.ToString(Formatting.None)
             };
-            if (returnString.Length > 50)
+            if (returnString.Length > 40)
             {
-                return returnString[..50] + "....";
+                return returnString[..40] + "....";
             }
             return returnString;
         }
@@ -245,14 +236,6 @@ public sealed partial class InteractiveJsonViewerItem : UserControl
 
     #endregion
 
-    private void UpdateTokenDisplay()
-    {
-        // If you have a TextBlock (e.g., TokenTextBlock) bound to Token's content,
-        // you might update it here. For instance:
-        // TokenTextBlock.Text = Token?.ToString() ?? string.Empty;
-        // If your XAML already binds to Token.ToString(), this method can be left empty.
-    }
-
     /// <summary>
     /// Handles the Edit button's Click event.
     /// </summary>
@@ -263,7 +246,6 @@ public sealed partial class InteractiveJsonViewerItem : UserControl
 
     private void OnEditToken(FlowElement flowElement, JToken token)
     {
-        // placeholder
         System.Diagnostics.Debug.WriteLine($"Edit requested for token: {token} in element {flowElement.Request.Url}");
     }
 }

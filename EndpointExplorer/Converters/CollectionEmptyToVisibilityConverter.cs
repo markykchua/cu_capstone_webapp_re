@@ -1,13 +1,19 @@
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Data;
+using System;
+using System.Collections;
+
 namespace EndpointExplorer.Converters;
 
-public class BoolToVisibilityConverter : IValueConverter
+public class CollectionEmptyToVisibilityConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
     {
-        bool result = value is bool b && b;
-        Visibility visibility = result ? Visibility.Visible : Visibility.Collapsed;
-        return visibility;
+        if (value is ICollection collection)
+        {
+            return collection.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
+        return Visibility.Collapsed;
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)
