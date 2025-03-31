@@ -170,7 +170,15 @@ public static partial class Utils
             }
             else if (body.TrimStart().StartsWith("<"))
             {
-                return body.Contains("<html") ? "text/html" : "application/xml";
+                try
+                {
+                    XDocument.Parse(body);
+                    return "application/xml";
+                }
+                catch
+                {
+                    return "text/html";
+                }
             }
         }
         return "text/plain";

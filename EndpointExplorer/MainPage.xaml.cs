@@ -787,7 +787,6 @@ public sealed partial class MainPage : Page
 
     private async void OnExportToOpenAPI(object sender, RoutedEventArgs e)
     {
-        // 1. Check if a flow is loaded
         if (Flow is null || !Flow.FlowElements.Any())
         {
             Log("No flow loaded or flow is empty. Cannot generate OpenAPI spec.", LogType.Warning);
@@ -798,7 +797,6 @@ public sealed partial class MainPage : Page
         string openApiSpecJson;
         try
         {
-            // 2. Generate the spec
             openApiSpecJson = Utils.GenerateOpenApiSpec(Flow);
             if (string.IsNullOrEmpty(openApiSpecJson))
             {
@@ -813,30 +811,22 @@ public sealed partial class MainPage : Page
             return;
         }
 
-        // 3. Configure File Save Picker
         var fileSavePicker = new FileSavePicker();
         fileSavePicker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
         fileSavePicker.SuggestedFileName = "openapi_spec.json";
         fileSavePicker.FileTypeChoices.Add("OpenAPI JSON", new List<string>() { ".json" });
-        // Optionally add YAML if your generator supports it or you convert it
-        // fileSavePicker.FileTypeChoices.Add("OpenAPI YAML", new List<string>() { ".yaml", ".yml" });
 
-        // Initialize picker with window handle (required for WinUI)
         var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(((App)Application.Current).MainWindow);
         WinRT.Interop.InitializeWithWindow.Initialize(fileSavePicker, hwnd);
 
-        // 4. Show picker and save file
         StorageFile saveFile = await fileSavePicker.PickSaveFileAsync();
         if (saveFile != null)
         {
             Log($"Attempting to save OpenAPI spec to {saveFile.Name}...", LogType.Info);
             try
             {
-                // Prevent updates to the file until saving is complete
                 CachedFileManager.DeferUpdates(saveFile);
-                // Write the generated string to the chosen file
                 await FileIO.WriteTextAsync(saveFile, openApiSpecJson);
-                // Complete updates and report status
                 FileUpdateStatus status = await CachedFileManager.CompleteUpdatesAsync(saveFile);
 
                 if (status == FileUpdateStatus.Complete)
@@ -845,7 +835,6 @@ public sealed partial class MainPage : Page
                 }
                 else
                 {
-                    // If CompleteUpdates fails, the file might be locked or otherwise unusable
                     Log($"Failed to finalize saving OpenAPI spec to {saveFile.Name}. Status: {status}", LogType.Error);
                 }
             }
@@ -861,6 +850,6 @@ public sealed partial class MainPage : Page
         }
     }
 
-    #endregion // End Export Menu Handlers
+    #endregion 
 
 }
