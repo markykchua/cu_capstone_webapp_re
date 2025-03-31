@@ -73,6 +73,10 @@ public partial class OrchestratorCLI : Verb
                         Console.WriteLine(flowElement.Value);
                     }
                     break;
+                case "Export Flow to Json":
+                    string exportFileName = GetUserInput("Enter the name to save the Flow file as") + ".txt";
+                    FlowExporter.ExportFlowToJson(Flow, exportFileName);
+                    break;
                 case "Find relations":
                     Flow.FindRelations();
                     break;
@@ -107,7 +111,7 @@ public partial class OrchestratorCLI : Verb
         }
         else
         {
-            options = [.. options, "Display next element", "Play next element", "Show relation variables"];
+            options = [.. options, "Display next element", "Play next element", "Show relation variables","Export Flow to Json"];
             if (Orchestrator.Completed.Count != 0)
             {
                 options = [.. options, "Display previous element"];
