@@ -68,6 +68,10 @@
             <MenuBarItem Title="Export">
                 <MenuFlyoutItem Text="To OpenAPI Specification..."
                                 Click="OnExportToOpenAPI" />
+                <MenuFlyoutItem Text="Flow To JSON..."
+                                Click="OnExportFlowToJson" />
+                <MenuFlyoutItem Text="Get Python Code..."
+                                Click="OnExportToPython" />
             </MenuBarItem>
             <!-- *** END ADD *** -->
         </MenuBar>

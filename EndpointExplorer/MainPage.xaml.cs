@@ -6,6 +6,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using Windows.Storage.Pickers;
 using Windows.Storage.Provider;
+using System.IO;
 
 namespace EndpointExplorer;
 
@@ -850,6 +851,258 @@ public sealed partial class MainPage : Page
         }
     }
 
+    private async void OnExportFlowToJson(object sender, RoutedEventArgs e)
+    {
+        if (Flow is null || !Flow.FlowElements.Any())
+        {
+            Log("No flow loaded or flow is empty. Cannot export to JSON.", LogType.Warning);
+            return;
+        }
+
+        Log("Exporting flow to JSON...", LogType.Info);
+
+        var fileSavePicker = new FileSavePicker();
+        fileSavePicker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
+        fileSavePicker.SuggestedFileName = "flow_export.json";
+        fileSavePicker.FileTypeChoices.Add("JSON File", new List<string>() { ".json" });
+
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(((App)Application.Current).MainWindow);
+        WinRT.Interop.InitializeWithWindow.Initialize(fileSavePicker, hwnd);
+
+        StorageFile saveFile = await fileSavePicker.PickSaveFileAsync();
+        if (saveFile != null)
+        {
+            Log($"Attempting to save flow to {saveFile.Name}...", LogType.Info);
+            try
+            {
+                CachedFileManager.DeferUpdates(saveFile);
+                string filePath = saveFile.Path;
+
+                // Use FlowExporter to export the flow to JSON
+                ExportFlowToJson(Flow, filePath);
+
+                FileUpdateStatus status = await CachedFileManager.CompleteUpdatesAsync(saveFile);
+
+                if (status == FileUpdateStatus.Complete)
+                {
+                    Log($"Flow exported successfully as {saveFile.Name}", LogType.Success);
+                }
+                else
+                {
+                    Log($"Failed to finalize saving flow to {saveFile.Name}. Status: {status}", LogType.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"Error writing flow to file {saveFile.Name}: {ex.Message}", LogType.Error);
+                Debug.WriteLine($"Flow Export Error: {ex}");
+            }
+        }
+        else
+        {
+            Log("Export to JSON cancelled.", LogType.Info);
+        }
+    }
+
+    public static void ExportFlowToJson(UserFlow userFlow, string filePath)
+    {
+        var exportData = new JObject
+        {
+            ["ExternalVariables"] = JObject.FromObject(userFlow.ExternalVariables),
+            ["Requests"] = new JArray(
+                userFlow.FlowElements.Select(flowElement => new JObject
+                {
+                    ["Url"] = flowElement.Request.Url,
+                    ["Method"] = flowElement.Request.Method.ToString(),
+                    ["QueryParams"] = JObject.FromObject(flowElement.Request.QueryParams),
+                    ["Headers"] = JObject.FromObject(flowElement.Request.Headers),
+                    ["Cookies"] = JObject.FromObject(flowElement.Request.Cookies),
+                    ["Body"] = flowElement.Request.Body
+                }))
+        };
+
+        File.WriteAllText(filePath, exportData.ToString(Formatting.Indented));
+    }
+
+    private async void OnExportToPython(object sender, RoutedEventArgs e)
+    {
+
+        Log("Exporting flow to Python script...", LogType.Info);
+
+        var fileSavePicker = new FileSavePicker();
+        fileSavePicker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
+        fileSavePicker.SuggestedFileName = "flow_replay.py";
+        fileSavePicker.FileTypeChoices.Add("Python File", new List<string>() { ".py" });
+
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(((App)Application.Current).MainWindow);
+        WinRT.Interop.InitializeWithWindow.Initialize(fileSavePicker, hwnd);
+
+        StorageFile saveFile = await fileSavePicker.PickSaveFileAsync();
+        if (saveFile != null)
+        {
+            Log($"Attempting to save Python script to {saveFile.Name}...", LogType.Info);
+            try
+            {
+                CachedFileManager.DeferUpdates(saveFile);
+
+                // Python code to be saved
+                string pythonCode = @"
+import requests
+from bs4 import BeautifulSoup
+import argparse
+import json  # Import json for safer parsing
+import urllib.parse  # Import for decoding URL-encoded strings
+import httpx  # Import httpx for HTTP/2 support
+
+# Session to persist cookies
+session = requests.Session()
+
+# get the CSRF token from the login page
+def get_csrf_token(base_url):
+    login_url = f'{base_url}'
+    response = session.get(login_url)
+    print(f'GET {login_url} - Response: {response.status_code}')
+    print(response.text)  
+
+    soup = BeautifulSoup(response.text, 'html.parser')
+    
+    # Debugging: Print the HTML to inspect the login form
+    with open('login_page.html', 'w', encoding='utf-8') as f:
+        f.write(soup.prettify())
+    
+    # Extract the CSRF token from the login form, adjusting the name if needed
+    csrf_token = soup.find('input', {'name': 'csrfmiddlewaretoken'})  
+    if csrf_token:
+        return csrf_token['value']
+    else:
+        print('CSRF token not found. Check the login page HTML.')
+        exit()
+
+# login function
+def login(base_url, identifier, password, method):
+    login_url = f'{base_url}'
+    
+    # Get the CSRF token
+    csrf_token = get_csrf_token(base_url)
+    
+    # Decode the identifier and password
+    decoded_identifier = urllib.parse.unquote_plus(identifier)
+    decoded_password = urllib.parse.unquote_plus(password)
+    
+    # Determine if the identifier is an email or username
+    if '@' in decoded_identifier:
+        login_payload = {
+            'email': decoded_identifier,  # Use the identifier as email
+            'password': decoded_password,
+            'csrfmiddlewaretoken': csrf_token  
+        }
+    else:
+        login_payload = {
+            'username': decoded_identifier,  # Use the identifier as username
+            'password': decoded_password,
+            'csrfmiddlewaretoken': csrf_token 
+        }
+    
+    # Set headers, including the Referer header
+    headers = {
+        'Referer': login_url  # Include the Referer header
+    }
+
+    # Send login request
+    if method == 'GET':
+        login_response = session.get(login_url, data=login_payload, headers=headers)
+    elif method == 'POST':
+        login_response = session.post(login_url, data=login_payload, headers=headers)
+    
+    print(login_payload)
+    if 'Logged in as' in login_response.text:
+        print('Login successful!')
+    else:
+        print('Login failed. Check your credentials.')
+        exit()
+
+# Function to parse the JSON file
+def parse_request_file(file_path):
+    with open(file_path, 'r', encoding='utf-8') as file:
+        data = json.load(file)
+
+    # Extract FlowElements and ExternalVariables
+    flow_elements = data.get('FlowElements', [])
+    external_variables = data.get('ExternalVariables', {})
+
+    # Log the extracted variables for debugging
+    print('\\n=== External Variables ===')
+    for key, value in external_variables.items():
+        print(f'{key}: {value}')
+
+    return flow_elements, external_variables
+
+# Function to replay requests from the parsed data
+def replay_requests(file_path):
+    flow_elements, external_variables = parse_request_file(file_path)
+
+    with httpx.Client(http2=True) as client:
+        for element in flow_elements:
+            request = element.get('Request', {})
+            response = element.get('Response', {})
+
+            method = request.get('Method')
+            if method == 0:
+                method = 'GET'
+            elif method == 1:
+                method = 'POST'
+            url = request.get('Url')
+
+            headers = request.get('Headers', {})
+            headers = {key: value for key, value in headers.items() if not key.startswith(':')}
+            body = request.get('Body', None)
+
+            print(f'\\nReplaying Request: {method} {url}')
+            print(f'Headers: {headers}')
+            print(f'Body: {body}')
+
+            # Send the request
+            if method == 'GET':
+                response_obj = client.get(url, headers=headers)
+            elif method == 'POST':
+                response_obj = client.post(url, headers=headers, data=body)
+            else:
+                print(f'Unsupported method: {method}')
+                continue
+
+            print(f'Response Status: {response_obj.status_code}')
+            print(f'Response Body: {response_obj.text[:500]}')  # Print first 500 characters of the response
+
+if __name__ == '__main__':
+    file_path = input('Enter the path to the JSON file: ')
+    replay_requests(file_path)
+";
+
+                // Write the Python code to the selected file
+                await FileIO.WriteTextAsync(saveFile, pythonCode);
+
+                FileUpdateStatus status = await CachedFileManager.CompleteUpdatesAsync(saveFile);
+
+                if (status == FileUpdateStatus.Complete)
+                {
+                    Log($"Python script exported successfully as {saveFile.Name}", LogType.Success);
+                }
+                else
+                {
+                    Log($"Failed to finalize saving Python script to {saveFile.Name}. Status: {status}", LogType.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"Error writing Python script to file {saveFile.Name}: {ex.Message}", LogType.Error);
+                Debug.WriteLine($"Python Export Error: {ex}");
+            }
+        }
+        else
+        {
+            Log("Export to Python cancelled.", LogType.Info);
+        }
+    }
     #endregion 
 
 }
