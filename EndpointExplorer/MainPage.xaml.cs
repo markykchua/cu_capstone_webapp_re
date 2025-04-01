@@ -909,8 +909,10 @@ public sealed partial class MainPage : Page
         var exportData = new JObject
         {
             ["ExternalVariables"] = JObject.FromObject(userFlow.ExternalVariables),
-            ["Requests"] = new JArray(
-                userFlow.FlowElements.Select(flowElement => new JObject
+            ["FlowElements"] = new JArray(
+            userFlow.FlowElements.Select(flowElement => new JObject
+            {
+                ["Request"] = new JObject
                 {
                     ["Url"] = flowElement.Request.Url,
                     ["Method"] = flowElement.Request.Method.ToString(),
@@ -918,7 +920,14 @@ public sealed partial class MainPage : Page
                     ["Headers"] = JObject.FromObject(flowElement.Request.Headers),
                     ["Cookies"] = JObject.FromObject(flowElement.Request.Cookies),
                     ["Body"] = flowElement.Request.Body
-                }))
+                },
+                ["Response"] = new JObject
+                {
+                    ["Status"] = flowElement.Response.Status,
+                    ["Headers"] = JObject.FromObject(flowElement.Response.Headers),
+                    ["Body"] = flowElement.Response.Body
+                }
+            }))
         };
 
         File.WriteAllText(filePath, exportData.ToString(Formatting.Indented));
@@ -926,12 +935,11 @@ public sealed partial class MainPage : Page
 
     private async void OnExportToPython(object sender, RoutedEventArgs e)
     {
-
         Log("Exporting flow to Python script...", LogType.Info);
 
         var fileSavePicker = new FileSavePicker();
         fileSavePicker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
-        fileSavePicker.SuggestedFileName = "flow_replay.py";
+        fileSavePicker.SuggestedFileName = "PythonExport.py";
         fileSavePicker.FileTypeChoices.Add("Python File", new List<string>() { ".py" });
 
         var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(((App)Application.Current).MainWindow);
@@ -949,38 +957,32 @@ public sealed partial class MainPage : Page
                 string pythonCode = @"
 import requests
 from bs4 import BeautifulSoup
-import argparse
-import json  # Import json for safer parsing
-import urllib.parse  # Import for decoding URL-encoded strings
-import httpx  # Import httpx for HTTP/2 support
-
+import json 
+import urllib.parse 
 # Session to persist cookies
 session = requests.Session()
 
 # get the CSRF token from the login page
 def get_csrf_token(base_url):
-    login_url = f'{base_url}'
-    response = session.get(login_url)
-    print(f'GET {login_url} - Response: {response.status_code}')
-    print(response.text)  
+    login_url = f""{base_url}""
 
+    response = session.get(login_url)
+    print(f""GET {login_url} - Response: {response.status_code}"")
+    
     soup = BeautifulSoup(response.text, 'html.parser')
     
-    # Debugging: Print the HTML to inspect the login form
-    with open('login_page.html', 'w', encoding='utf-8') as f:
-        f.write(soup.prettify())
-    
-    # Extract the CSRF token from the login form, adjusting the name if needed
-    csrf_token = soup.find('input', {'name': 'csrfmiddlewaretoken'})  
+    # Extract the CSRF token
+    csrf_token = soup.find('input', {'name': 'csrfmiddlewaretoken'})
     if csrf_token:
+        print(f""Extracted CSRF Token: {csrf_token['value']}"")
         return csrf_token['value']
     else:
-        print('CSRF token not found. Check the login page HTML.')
+        print(""CSRF token not found. Check the login page HTML."")
         exit()
 
 # login function
 def login(base_url, identifier, password, method):
-    login_url = f'{base_url}'
+    login_url = f""{base_url}""
     
     # Get the CSRF token
     csrf_token = get_csrf_token(base_url)
@@ -990,7 +992,7 @@ def login(base_url, identifier, password, method):
     decoded_password = urllib.parse.unquote_plus(password)
     
     # Determine if the identifier is an email or username
-    if '@' in decoded_identifier:
+    if ""@"" in decoded_identifier:
         login_payload = {
             'email': decoded_identifier,  # Use the identifier as email
             'password': decoded_password,
@@ -1009,16 +1011,16 @@ def login(base_url, identifier, password, method):
     }
 
     # Send login request
-    if method == 'GET':
+    if method == ""GET"":
         login_response = session.get(login_url, data=login_payload, headers=headers)
-    elif method == 'POST':
+    elif method == ""POST"":
         login_response = session.post(login_url, data=login_payload, headers=headers)
     
     print(login_payload)
-    if 'Logged in as' in login_response.text:
-        print('Login successful!')
+    if ""Logged in as"" in login_response.text:
+        print(""Login successful!"")
     else:
-        print('Login failed. Check your credentials.')
+        print(""Login failed. Check your credentials."")
         exit()
 
 # Function to parse the JSON file
@@ -1027,13 +1029,13 @@ def parse_request_file(file_path):
         data = json.load(file)
 
     # Extract FlowElements and ExternalVariables
-    flow_elements = data.get('FlowElements', [])
-    external_variables = data.get('ExternalVariables', {})
+    flow_elements = data.get(""FlowElements"", [])
+    external_variables = data.get(""ExternalVariables"", {})
 
     # Log the extracted variables for debugging
-    print('\\n=== External Variables ===')
+    print(""\\n=== External Variables ==="")
     for key, value in external_variables.items():
-        print(f'{key}: {value}')
+        print(f""{key}: {value}"")
 
     return flow_elements, external_variables
 
@@ -1041,41 +1043,194 @@ def parse_request_file(file_path):
 def replay_requests(file_path):
     flow_elements, external_variables = parse_request_file(file_path)
 
-    with httpx.Client(http2=True) as client:
-        for element in flow_elements:
-            request = element.get('Request', {})
-            response = element.get('Response', {})
+    for element in flow_elements:
+        request = element.get(""Request"", {})
+        expected_response = element.get(""Response"", {})  # Expected response from JSON
 
-            method = request.get('Method')
-            if method == 0:
-                method = 'GET'
-            elif method == 1:
-                method = 'POST'
-            url = request.get('Url')
+        print(f""\\n=== Request ==="")
+        print(request)
 
-            headers = request.get('Headers', {})
-            headers = {key: value for key, value in headers.items() if not key.startswith(':')}
-            body = request.get('Body', None)
+        method = request.get(""Method"")
+        if method == 0:
+            method = ""GET""
+        elif method == 1:
+            method = ""POST""
+        url = request.get(""Url"")
+        headers = request.get(""Headers"", {})
+        headers = {key: value for key, value in headers.items() if not key.startswith("":"")}
+        body = request.get(""Body"", None)
 
-            print(f'\\nReplaying Request: {method} {url}')
-            print(f'Headers: {headers}')
-            print(f'Body: {body}')
+        # Skip requests with ""googleads"" in the URL
+        if url and ""googleads"" in url:
+            print(f""Skipping request with URL containing 'googleads': {url}"")
+            continue
 
-            # Send the request
-            if method == 'GET':
-                response_obj = client.get(url, headers=headers)
-            elif method == 'POST':
-                response_obj = client.post(url, headers=headers, data=body)
+        print(f""\\nReplaying Request: {method} {url}"")
+        print(f""Headers: {headers}"")
+        print(f""Body: {body}"")
+
+        if method == ""GET"":
+            response_obj = session.get(url, headers=headers)
+        elif method == ""POST"":
+            response_obj = session.post(url, headers=headers, data=body)
+        else:
+            print(f""Unsupported method: {method}"")
+            continue
+
+        actual_response = {
+            ""StatusCode"": response_obj.status_code,
+            ""Body"": response_obj.text[:500]  # Limit to first 500 characters for readability
+        }
+
+        # Display comparison of expected and actual responses
+        print(""\\n=== Response Comparison ==="")
+        print(f""Expected Status Code: {expected_response.get('StatusCode')}"")
+        print(f""Actual Status Code: {actual_response['StatusCode']}"")
+        print(f""Expected Body (first 500 chars): {expected_response.get('Body', '')[:500]}"")
+        print(f""Actual Body (first 500 chars): {actual_response['Body']}"")
+
+    # Function to replay requests step by step
+def replay_requests_step_by_step(file_path):
+    flow_elements, external_variables = parse_request_file(file_path)
+
+    for i, element in enumerate(flow_elements):
+        request = element.get(""Request"", {})
+        expected_response = element.get(""Response"", {})  # Expected response from JSON
+
+        method = request.get(""Method"")
+        if method == 0:
+            method = ""GET""
+        elif method == 1:
+            method = ""POST""
+        url = request.get(""Url"")
+        headers = request.get(""Headers"", {})
+        headers = {key: value for key, value in headers.items() if not key.startswith("":"")}
+        body = request.get(""Body"", None)
+
+        print(f""\nStep {i + 1}: Replaying Request: {method} {url}"")
+        print(f""Headers: {headers}"")
+        print(f""Body: {body}"")
+
+        if url and (""login"" in url or ""signin"" in url):  # Ensure url is not None
+            if ""extracted_email_"" in external_variables and ""extracted_password_"" in external_variables:
+                login(
+                    url,
+                    external_variables[""extracted_email_""],
+                    external_variables[""extracted_password_""],
+                    method,
+                )
             else:
-                print(f'Unsupported method: {method}')
+                print(""Missing required external variables for login."")
+            continue
+
+        if method == ""GET"":
+            response_obj = session.get(url, headers=headers)
+        elif method == ""POST"":
+            response_obj = session.post(url, headers=headers, data=body)
+        else:
+            print(f""Unsupported method: {method}"")
+            continue
+
+        actual_response = {
+            ""StatusCode"": response_obj.status_code,
+            ""Body"": response_obj.text[:500]  # Limit to first 500 characters for readability
+        }
+
+        # Display comparison of expected and actual responses
+        print(""\n=== Response Comparison ==="")
+        print(f""Expected Status Code: {expected_response.get('StatusCode')}"")
+        print(f""Actual Status Code: {actual_response['StatusCode']}"")
+        print(f""Expected Body (first 500 chars): {expected_response.get('Body', '')[:500]}"")
+        print(f""Actual Body (first 500 chars): {actual_response['Body']}"")
+
+        # Pause for user input before proceeding to the next request
+        input(""\nPress Enter to continue to the next request..."")
+
+# CLI menu
+def display_menu():
+    file_path = None
+    external_variables = {}
+
+    while True:
+        if not file_path:
+            print(""\nNo file selected. Please select a JSON file to proceed."")
+            file_path = input(""Enter the path to the JSON file: "")
+            try:
+                _, external_variables = parse_request_file(file_path)
+                for key, value in external_variables.items():
+                    if key in (""extracted_email_"", ""extracted_password_"", ""extracted_username_""):
+                        external_variables[key] = urllib.parse.unquote_plus(value)
+            except Exception as e:
+                print(f""Error loading file: {e}"")
+                file_path = None
                 continue
 
-            print(f'Response Status: {response_obj.status_code}')
-            print(f'Response Body: {response_obj.text[:500]}')  # Print first 500 characters of the response
+        print(""\n=== Main Menu ==="")
+        print(f""Current file: {file_path}"")
+        print(""1. Replay requests from the selected JSON file"")
+        print(""2. Replay requests step by step from the selected JSON file"")
+        print(""3. Modify external variables"")
+        print(""4. Change JSON file"")
+        print(""5. Exit"")
+        choice = input(""Enter your choice: "")
 
-if __name__ == '__main__':
-    file_path = input('Enter the path to the JSON file: ')
-    replay_requests(file_path)
+        if choice == ""1"":
+            replay_requests(file_path)
+        elif choice == ""2"":
+            replay_requests_step_by_step(file_path)
+        elif choice == ""3"":
+            modify_external_variables(external_variables)
+        elif choice == ""4"":
+            file_path = None  # Reset file selection
+        elif choice == ""5"":
+            print(""Exiting the program. Goodbye!"")
+            break
+        else:
+            print(""Invalid choice. Please try again."")
+
+# Modify external variables CLI
+def modify_external_variables(external_variables):
+    print(""\n=== Modify External Variables ==="")
+    print(""Current external variables:"")
+    for key, value in external_variables.items():
+        print(f""{key}: {value}"")
+
+    while True:
+        print(""\nOptions:"")
+        print(""1. Modify a variable"")
+        print(""2. Add a new variable"")
+        print(""3. Delete a variable"")
+        print(""4. Return to main menu"")
+        choice = input(""Enter your choice: "")
+
+        if choice == ""1"":
+            print(external_variables)
+            key = input(""Enter the name of the variable to modify: "")
+            if key in external_variables:
+                new_value = input(f""Enter the new value for {key}: "")
+                external_variables[key] = new_value
+                print(f""Variable '{key}' updated to '{new_value}'."")
+            else:
+                print(f""Variable '{key}' not found."")
+        elif choice == ""2"":
+            key = input(""Enter the name of the new variable: "")
+            value = input(f""Enter the value for {key}: "")
+            external_variables[key] = value
+            print(f""Variable '{key}' added with value '{value}'."")
+        elif choice == ""3"":
+            key = input(""Enter the name of the variable to delete: "")
+            if key in external_variables:
+                del external_variables[key]
+                print(f""Variable '{key}' deleted."")
+            else:
+                print(f""Variable '{key}' not found."")
+        elif choice == ""4"":
+            break
+        else:
+            print(""Invalid choice. Please try again."")
+
+if __name__ == ""__main__"":
+    display_menu()
 ";
 
                 // Write the Python code to the selected file
