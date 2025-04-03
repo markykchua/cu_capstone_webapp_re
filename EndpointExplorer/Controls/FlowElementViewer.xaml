@@ -44,182 +44,188 @@
             </MenuFlyoutItem>
         </MenuFlyout>
     </UserControl.Resources>
-    <Grid VerticalAlignment="Stretch">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-        <!-- Request Section -->
-        <Grid Grid.Row="0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <Border BorderBrush="{x:Bind RequestColor, Mode=OneWay, Converter={StaticResource ColorToBrushConverter}}"
-                    BorderThickness="1"
-                    Padding="8"
-                    CornerRadius="4"
-                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                    Grid.Column="0">
-                <Grid>
-                    <!-- Collapsed View -->
-                    <StackPanel Visibility="{x:Bind IsRequestCollapsed, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
-                                Spacing="2"
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center">
-                        <TextBlock Text="{x:Bind RequestMethod, Mode=OneWay, FallbackValue=METHOD}"
-                                   FontWeight="SemiBold"
-                                   HorizontalAlignment="Center"
-                                   Style="{StaticResource CaptionTextBlockStyle}" />
-                        <TextBlock Text="{x:Bind RequestHost, Mode=OneWay, FallbackValue=host.com}"
-                                   TextWrapping="NoWrap"
-                                   HorizontalAlignment="Center"
-                                   ToolTipService.ToolTip="{x:Bind RequestHost, Mode=OneWay}"
-                                   Style="{StaticResource CaptionTextBlockStyle}" />
-                        <TextBlock Text="{x:Bind RequestEndpoint, Mode=OneWay, FallbackValue=/endpoint}"
-                                   TextWrapping="NoWrap"
-                                   HorizontalAlignment="Center"
-                                   ToolTipService.ToolTip="{x:Bind RequestEndpoint, Mode=OneWay}"
-                                   Style="{StaticResource CaptionTextBlockStyle}" />
-                    </StackPanel>
-                    <!-- Expanded View -->
-                    <StackPanel Visibility="{x:Bind IsRequestExpanded, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <local:InteractiveJsonViewerItem Token="{x:Bind RequestToken, Mode=OneWay}"
-                                                         FlowElement="{x:Bind FlowElement, Mode=OneWay}"
-                                                         JsonEdited="OnJsonEdited" />
-                    </StackPanel>
-                </Grid>
-            </Border>
-            <Button Grid.Column="1"
-                    Click="ToggleRequestExpand_Click"
-                    VerticalAlignment="Top"
-                    Style="{StaticResource SubtleButtonStyle}"
-                    Padding="5"
-                    Content="{x:Bind RequestToggleIcon, Mode=OneWay}" />
-        </Grid>
-        <!-- Arrow -->
-        <Grid Grid.Row="1"
-              Height="32"
-              Margin="0,4">
-            <Path Data="M 0,0 L 0,16 L -8,16 L 0,32 L 8,16 L 0,16"
-                  Stroke="{ThemeResource TextFillColorSecondaryBrush}"
-                  StrokeThickness="1"
-                  HorizontalAlignment="Center"
-                  VerticalAlignment="Center" />
-        </Grid>
-        <!-- Response Section -->
-        <Grid Grid.Row="2">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <Border BorderBrush="{x:Bind ResponseStatusColor, Mode=OneWay, Converter={StaticResource ColorToBrushConverter}}"
-                    BorderThickness="1"
-                    Padding="8"
-                    CornerRadius="4"
-                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                    Grid.Column="0">
-                <Grid>
-                    <!-- Collapsed View -->
-                    <StackPanel Visibility="{x:Bind IsResponseCollapsed, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center">
-                        <TextBlock Style="{StaticResource CaptionTextBlockStyle}">
-                            <Run Text="{x:Bind ResponseStatus, Mode=OneWay, FallbackValue=XXX}"
-                                 FontWeight="SemiBold" />
-                            <Run Text="{x:Bind ResponseStatusName, Mode=OneWay, FallbackValue=Status}" />
-                        </TextBlock>
-                    </StackPanel>
-                    <!-- Expanded View -->
-                    <StackPanel Visibility="{x:Bind IsResponseExpanded, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <Border BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
-                                BorderThickness="0,1,0,0"
-                                Margin="0,5,0,5" />
-                        <local:InteractiveJsonViewerItem Token="{x:Bind ResponseToken, Mode=OneWay}"
-                                                         FlowElement="{x:Bind FlowElement, Mode=OneWay}"
-                                                         JsonEdited="OnJsonEdited" />
-                    </StackPanel>
-                </Grid>
-            </Border>
-            <Button Grid.Column="1"
-                    Click="ToggleResponseExpand_Click"
-                    VerticalAlignment="Top"
-                    Style="{StaticResource SubtleButtonStyle}"
-                    Padding="5"
-                    Content="{x:Bind ResponseToggleIcon, Mode=OneWay}" />
-        </Grid>
-        <!-- Exports Separator -->
-        <Border Grid.Row="3"
-                BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
-                BorderThickness="0,1,0,0"
-                Margin="10,10,10,0" />
-        <!-- Exports Section -->
-        <Grid Grid.Row="4"
-              Margin="10,5,10,0">
-            <Border x:Name="ExportsBorder"
+    <Border BorderBrush="{x:Bind BorderColor, Mode=OneWay, Converter={StaticResource ColorToBrushConverter}}"
+            BorderThickness="3"
+            Padding="8"
+            CornerRadius="2"
+            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+        <Grid VerticalAlignment="Stretch">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <!-- Request Section -->
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border BorderBrush="{x:Bind RequestColor, Mode=OneWay, Converter={StaticResource ColorToBrushConverter}}"
+                        BorderThickness="3"
+                        Padding="8"
+                        CornerRadius="4"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        Grid.Column="0">
+                    <Grid>
+                        <!-- Collapsed View -->
+                        <StackPanel Visibility="{x:Bind IsRequestCollapsed, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
+                                    Spacing="2"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center">
+                            <TextBlock Text="{x:Bind RequestMethod, Mode=OneWay, FallbackValue=METHOD}"
+                                       FontWeight="SemiBold"
+                                       HorizontalAlignment="Center"
+                                       Style="{StaticResource CaptionTextBlockStyle}" />
+                            <TextBlock Text="{x:Bind RequestHost, Mode=OneWay, FallbackValue=host.com}"
+                                       TextWrapping="NoWrap"
+                                       HorizontalAlignment="Center"
+                                       ToolTipService.ToolTip="{x:Bind RequestHost, Mode=OneWay}"
+                                       Style="{StaticResource CaptionTextBlockStyle}" />
+                            <TextBlock Text="{x:Bind RequestEndpoint, Mode=OneWay, FallbackValue=/endpoint}"
+                                       TextWrapping="NoWrap"
+                                       HorizontalAlignment="Center"
+                                       ToolTipService.ToolTip="{x:Bind RequestEndpoint, Mode=OneWay}"
+                                       Style="{StaticResource CaptionTextBlockStyle}" />
+                        </StackPanel>
+                        <!-- Expanded View -->
+                        <StackPanel Visibility="{x:Bind IsRequestExpanded, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <local:InteractiveJsonViewerItem Token="{x:Bind RequestToken, Mode=OneWay}"
+                                                             FlowElement="{x:Bind FlowElement, Mode=OneWay}"
+                                                             JsonEdited="OnJsonEdited" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+                <Button Grid.Column="1"
+                        Click="ToggleRequestExpand_Click"
+                        VerticalAlignment="Top"
+                        Style="{StaticResource SubtleButtonStyle}"
+                        Padding="5"
+                        Content="{x:Bind RequestToggleIcon, Mode=OneWay}" />
+            </Grid>
+            <!-- Arrow -->
+            <Grid Grid.Row="1"
+                  Height="32"
+                  Margin="0,4">
+                <Path Data="M 0,0 L 0,16 L -8,16 L 0,32 L 8,16 L 0,16"
+                      Stroke="{ThemeResource TextFillColorSecondaryBrush}"
+                      StrokeThickness="1"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center" />
+            </Grid>
+            <!-- Response Section -->
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border BorderBrush="{x:Bind ResponseStatusColor, Mode=OneWay, Converter={StaticResource ColorToBrushConverter}}"
+                        BorderThickness="3"
+                        Padding="8"
+                        CornerRadius="4"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        Grid.Column="0">
+                    <Grid>
+                        <!-- Collapsed View -->
+                        <StackPanel Visibility="{x:Bind IsResponseCollapsed, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center">
+                            <TextBlock Style="{StaticResource CaptionTextBlockStyle}">
+                                <Run Text="{x:Bind ResponseStatus, Mode=OneWay, FallbackValue=XXX}"
+                                     FontWeight="SemiBold" />
+                                <Run Text="{x:Bind ResponseStatusName, Mode=OneWay, FallbackValue=Status}" />
+                            </TextBlock>
+                        </StackPanel>
+                        <!-- Expanded View -->
+                        <StackPanel Visibility="{x:Bind IsResponseExpanded, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <Border BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                                    BorderThickness="0,1,0,0"
+                                    Margin="0,5,0,5" />
+                            <local:InteractiveJsonViewerItem Token="{x:Bind ResponseToken, Mode=OneWay}"
+                                                             FlowElement="{x:Bind FlowElement, Mode=OneWay}"
+                                                             JsonEdited="OnJsonEdited" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+                <Button Grid.Column="1"
+                        Click="ToggleResponseExpand_Click"
+                        VerticalAlignment="Top"
+                        Style="{StaticResource SubtleButtonStyle}"
+                        Padding="5"
+                        Content="{x:Bind ResponseToggleIcon, Mode=OneWay}" />
+            </Grid>
+            <!-- Exports Separator -->
+            <Border Grid.Row="3"
                     BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
-                    BorderThickness="1"
-                    Padding="8"
-                    CornerRadius="4"
-                    Background="{ThemeResource LayerFillColorDefaultBrush}"
-                    IsRightTapEnabled="True"
-                    RightTapped="ExportsBorder_RightTapped">
-                <StackPanel>
-                    <TextBlock Text="Exports"
-                               Style="{StaticResource CaptionTextBlockStyle}"
-                               Margin="0,0,0,5" />
-                    <TextBlock Text="Right-click to add export..."
-                               Style="{StaticResource CaptionTextBlockStyle}"
-                               Foreground="{ThemeResource TextFillColorTertiaryBrush}"
-                               FontStyle="Italic"
-                               HorizontalAlignment="Center"
-                               Margin="0,10"
-                               Visibility="{x:Bind ObservableExports, Mode=OneWay, Converter={StaticResource CollectionEmptyToVisibilityConverter}}" />
-                    <ListView x:Name="ExportsListView"
-                              ItemsSource="{x:Bind ObservableExports, Mode=OneWay}"
-                              SelectionMode="None"
-                              IsItemClickEnabled="False"
-                              CanDragItems="False"
-                              CanReorderItems="False"
-                              Visibility="{x:Bind ExportsVisibility, Mode=OneWay}"
-                              IsRightTapEnabled="True"
-                              RightTapped="ExportsListView_ItemRightTapped">
-                        <ListView.ItemTemplate>
-                            <DataTemplate x:DataType="local:ExportViewModel">
-                                <Grid ToolTipService.ToolTip="{x:Bind JsonPath}">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto"
-                                                          MinWidth="20" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="{x:Bind Key}"
-                                               FontWeight="SemiBold"
-                                               Grid.Column="0"
-                                               Margin="0,0,5,0" />
-                                    <TextBlock Text="{x:Bind JsonPath}"
-                                               Grid.Column="1"
-                                               TextTrimming="CharacterEllipsis"
-                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                    <FontIcon Glyph=""
-                                              FontFamily="Segoe MDL2 Assets"
-                                              FontSize="10"
-                                              Grid.Column="2"
-                                              VerticalAlignment="Center"
-                                              Margin="5,0,0,0"
-                                              Foreground="{ThemeResource TextFillColorTertiaryBrush}"
-                                              ToolTipService.ToolTip="{x:Bind Regex}"
-                                              Visibility="{x:Bind Regex, Converter={StaticResource StringNotEmptyToVisibilityConverter}}" />
-                                </Grid>
-                            </DataTemplate>
-                        </ListView.ItemTemplate>
-                    </ListView>
-                </StackPanel>
-            </Border>
+                    BorderThickness="0,1,0,0"
+                    Margin="10,10,10,0" />
+            <!-- Exports Section -->
+            <Grid Grid.Row="4"
+                  Margin="10,5,10,0">
+                <Border x:Name="ExportsBorder"
+                        BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        Padding="8"
+                        CornerRadius="4"
+                        Background="{ThemeResource LayerFillColorDefaultBrush}"
+                        IsRightTapEnabled="True"
+                        RightTapped="ExportsBorder_RightTapped">
+                    <StackPanel>
+                        <TextBlock Text="Exports"
+                                   Style="{StaticResource CaptionTextBlockStyle}"
+                                   Margin="0,0,0,5" />
+                        <TextBlock Text="Right-click to add export..."
+                                   Style="{StaticResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                   FontStyle="Italic"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,10"
+                                   Visibility="{x:Bind ObservableExports, Mode=OneWay, Converter={StaticResource CollectionEmptyToVisibilityConverter}}" />
+                        <ListView x:Name="ExportsListView"
+                                  ItemsSource="{x:Bind ObservableExports, Mode=OneWay}"
+                                  SelectionMode="None"
+                                  IsItemClickEnabled="False"
+                                  CanDragItems="False"
+                                  CanReorderItems="False"
+                                  Visibility="{x:Bind ExportsVisibility, Mode=OneWay}"
+                                  IsRightTapEnabled="True"
+                                  RightTapped="ExportsListView_ItemRightTapped">
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="local:ExportViewModel">
+                                    <Grid ToolTipService.ToolTip="{x:Bind JsonPath}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto"
+                                                              MinWidth="20" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{x:Bind Key}"
+                                                   FontWeight="SemiBold"
+                                                   Grid.Column="0"
+                                                   Margin="0,0,5,0" />
+                                        <TextBlock Text="{x:Bind JsonPath}"
+                                                   Grid.Column="1"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        <FontIcon Glyph=""
+                                                  FontFamily="Segoe MDL2 Assets"
+                                                  FontSize="10"
+                                                  Grid.Column="2"
+                                                  VerticalAlignment="Center"
+                                                  Margin="5,0,0,0"
+                                                  Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                                  ToolTipService.ToolTip="{x:Bind Regex}"
+                                                  Visibility="{x:Bind Regex, Converter={StaticResource StringNotEmptyToVisibilityConverter}}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </StackPanel>
+                </Border>
+            </Grid>
         </Grid>
-    </Grid>
+    </Border>
 </UserControl>

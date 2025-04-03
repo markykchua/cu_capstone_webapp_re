@@ -113,6 +113,7 @@ public sealed partial class FlowElementViewer : UserControl, INotifyPropertyChan
                 NotifyPropertyChanged();
                 NotifyPropertyChanged(nameof(RequestColor));
                 NotifyPropertyChanged(nameof(ResponseStatusColor));
+                NotifyPropertyChanged(nameof(BorderColor));
             }
         }
     }
@@ -196,6 +197,7 @@ public sealed partial class FlowElementViewer : UserControl, INotifyPropertyChan
     }
     public Color ResponseStatusColor => GetStatusColor(_responseStatus);
     public Color RequestColor => IsCurrentElement ? GetMutedColor(Colors.Gray) : Colors.Gray;
+    public Color BorderColor => IsCurrentElement ? Colors.Black : GetMutedColor(Colors.Gray);
     public Visibility ExportsVisibility => ObservableExports.Any() ? Visibility.Visible : Visibility.Collapsed;
     #endregion
 
@@ -536,11 +538,11 @@ public sealed partial class FlowElementViewer : UserControl, INotifyPropertyChan
             "404" => Colors.Red,
             "500" => Colors.Red,
             _ => Colors.Black
-        }; return IsCurrentElement ? GetMutedColor(color) : color;
+        }; return IsCurrentElement ? color : GetMutedColor(color);
     }
     private Color GetMutedColor(Color color)
     {
-        return Color.FromArgb((byte)(color.A * 0.5), (byte)(color.R * 1), (byte)(color.G * 1), (byte)(color.B * 1));
+        return Color.FromArgb((byte)(color.A * 0.35), (byte)(color.R * 1), (byte)(color.G * 1), (byte)(color.B * 1));
     }
     #endregion
 }
